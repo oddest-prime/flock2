@@ -50,8 +50,11 @@
 		typedef Vec3F			f3;		
 		typedef Vec3I			i3;
 		typedef Quaternion		q4;
-		#define ALIGN(n)		__declspec(align(n))					// MSVC
-		//#define ALIGN(n)  __attribute__((aligned(n)))		// GCC
+    #ifdef _WIN32
+		  #define ALIGN(n)		__declspec(align(n))					// MSVC
+    #else
+		  #define ALIGN(n)  __attribute__((aligned(n)))		// GCC
+		#endif		
 	#endif
 
 
