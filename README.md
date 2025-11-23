@@ -23,15 +23,31 @@ Flock2 uses a *perceptual* model of social factors which projects the avoidance,
 ### Aerodynamic Model
 Flock2 contains a low-level controller to model the Aerodynamic Forces of each bird. The low-level controller, [Flightsim](https://github.com/ramakarl/flightsim) (https://github.com/ramakarl/flightsim), is fully integrated into Flock2 and does not need to be compiled separately. This aerodynamic model includes lift, gravity and drag, and also exhibits features such as altitude loss during banking, speed changes when diving or climbing, angle-of-attack and stalls. Flightsim is a fixed-wing, single-body force model (SBFM) based on dynamic stability, which is more efficient and less complex that a full aircraft model that iterates over multiple control surfaces. See more details on the motivation and design of [Flightsim here](https://github.com/ramakarl/flightsim). 
 
-### Quick Installation
-Platforms: Windows or Linux<br>
+## How to Build
+
+**Updated Nov 2025**<br>
+Build with cmake is now simpler and faster.<br>
+Libmin dependent code is now directly compiled with each project (no shared or static libs).<br>
 Steps:<br>
-1. Clone this repository locally.<br>
-2. Install Git (cmdline), Cmake and Visual Studio 2019 or higher.
-3. For GPU support (NVIDIA only), install CUDA Toolkit 10.2 or higher.<br>
-4. Run **build_all.bat** (Windows) or **build_all.sh** (Linux) for your platform.<br>
+1. Clone this flock2 repo<br>
+2. Clone <a href="https://github.com/ramakarl/libmin">libmin</a> as a sibling folder<br>
+<pre>
+\codes
+ ├── \flock2
+ └── \libmin
+</pre>
+3. Run cmake or cmake-gui on flock2.<br>
+4. Compile and run.
 
-### Rama Carl Hoetzlein (c) 2023-2024. MIT License
-[https://ramakarl.com](https://ramakarl.com)
+Let me know if you have any issues building.
 
+## Contact
+Feel free to contact me if you have any questions, comments or suggestions:<br>
+**Rama Hoetzlein** <br>
+Website: <a href="https://ramakarl.com">ramakarl.com</a><br>
+Email: ramahoetzlein@gmail.com<br>
+
+## License & Copyright info
+MIT License.<br>
+Copyright 2023-2024 (c) Quanta Sciences & Rama Hoetzlein<br>
 
