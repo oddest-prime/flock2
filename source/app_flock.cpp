@@ -46,7 +46,6 @@ using namespace std;
 //#define DEBUG_BIRD		7
 
 #include "gxlib.h"			// low-level render
-#include "g2lib.h"			// gui system
 using namespace glib;
 
 // Bird structures
@@ -86,7 +85,7 @@ struct graph_t {
 #define GRAPH_MAX		4
 
 // FFTW Analysis
-#ifdef USE_FFTW
+#ifdef BUILD_FFTW
 	#include <fftw3.3/fftw3.h>	
 #endif
 
@@ -230,7 +229,7 @@ public:
 	std::vector< Vec4F >	m_lines;
 
 	// Stats - Frequency analysis
-	#ifdef USE_FFTW
+	#ifdef BUILD_FFTW
 		double*				m_samples;
 		double*				m_fftw_in;
 		int						m_fftw_N;
@@ -283,7 +282,7 @@ Flock2 obj;
 		std::string ptxfile = "flock_kernels.ptx";
 		std::string filepath;
 		if (!getFileLocation ( ptxfile, filepath )) {
-			printf ( "ERROR: Unable to find %s\n", ptxfile.c_str() );
+			printf ( "ERROR: CUDA kernel file not found: %s\n", ptxfile.c_str() ); 
 			exit(-7);
 		}
 		cuCheck ( cuModuleLoad ( &m_Module, filepath.c_str() ), "LoadKernel", "cuModuleLoad", "flock_kernels.ptx", DEBUG_CUDA );
@@ -368,7 +367,7 @@ void Flock2::DefaultParams ()
 	// SI units:
 	// vel = m/s, accel = m/s^2, mass = kg, thrust(power) = N (kg m/s^2)	
 	//
-	m_Params.num_birds = 10000;
+	m_Params.num_birds = (m_gpu) ? 10000 : 2000;
 	m_Params.num_predators = 0;
   m_Params.neighbors = 7;
 
@@ -1333,7 +1332,7 @@ void Flock2::StartNextRun ()
 {
 	// record the last run
 	// printf ( "run, num_run, val, #bird, #peaks, peak_ave, g0_min,g0_max, g1_min,g1_max, g2_min,g2_max, g3_min,g3_max\n" );
-	#ifdef USE_FFTW
+	#ifdef BUILD_FFTW
 		if (m_run >= 0) {
 		  fprintf ( m_runs_outfile, "%d,%d,%f, %d,%d,%f, %f, %f,%f, %f,%f, %f,%f, %f,%f\n", m_run, m_num_run, m_val.z, m_Params.num_birds, m_peak_cnt, m_peak_ave, m_peak_max, 
 			  m_freq_gmin[0],m_freq_gmax[0], m_freq_gmin[1],m_freq_gmax[1], m_freq_gmin[2],m_freq_gmax[2], m_freq_gmin[3],m_freq_gmax[3] );
@@ -1363,7 +1362,7 @@ void Flock2::StartNextRun ()
 void Flock2::OutputFFTW ( int frame )
 {
 
-  #ifdef USE_FFTW
+  #ifdef BUILD_FFTW
 		Bird* b;
 		float ang_accel;
 		Vec4F c;
@@ -2576,7 +2575,7 @@ bool Flock2::init ()
 	m_rnd.seed(m_seed);
 
 	// Build FFTW arrays 
-	#ifdef USE_FFTW		
+	#ifdef BUILD_FFTW		
 		m_fftw_N = 512;
 		m_fftw_in = (double*) malloc ( sizeof(double) * m_fftw_N );
 		m_fftw_out = (fftw_complex*) fftw_malloc ( sizeof(fftw_complex) * m_fftw_N);
@@ -2617,7 +2616,7 @@ bool Flock2::init ()
 	m_cam = new Camera3D;
 	m_cam->setFov ( 70 );
 	m_cam->setNearFar ( 1.0, 100000 );
-	m_cam->SetOrbit ( Vec3F(-30,30,0), Vec3F(0,50,0), 300, 1 );
+	m_cam->SetOrbit ( Vec3F(-30,30,0), Vec3F(0,50,0), 100, 1 );
 
 	// Initialize experimental setup
 	//
@@ -2887,7 +2886,6 @@ void Flock2::display ()
 	int w = getWidth();
 	int h = getHeight();
 
-	Bird* b;
 	Predator* p;
 
 	glLineWidth ( 2 );
@@ -3186,6 +3184,8 @@ void Flock2::keyboard(int keycode, AppEnum action, int mods, int x, int y)
 
 void Flock2::reshape (int w, int h)
 {
+  if (m_cam==0x0) return;
+
 	glViewport ( 0, 0, w, h );
 	setview2D ( w, h );
 
@@ -3211,7 +3211,7 @@ void Flock2::startup ()
 	SetupParams();
 	DefaultParams();
 
-	int w = 1920, h = 1080;
+	int w = 1200, h = 700;
 	appStart ( "Flock2 (c) 2024 Hoetzlein", "Flock2", w, h, 4, 2, 16, false );	
 
 	// on_arg is called before init() to load scene and config parameters
@@ -3219,7 +3219,7 @@ void Flock2::startup ()
 
 void Flock2::shutdown()
 {
-  #ifdef USE_FFTW
+  #ifdef BUILD_FFTW
 	// destroy FFTW buffers	
 	fftw_destroy_plan( m_fftw_plan);
 	fftw_free ( m_fftw_out );
