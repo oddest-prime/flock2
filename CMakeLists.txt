@@ -39,6 +39,10 @@ file(GLOB MAIN_FILES source/*.cpp source/*.h )
 
 _GET_GLOBALS()
 
+if(MSVC)
+    add_compile_options(/MP)    # multi-threaded compilation
+endif()
+
 add_executable (${PROJNAME} ${MAIN_FILES} ${CUDA_FILES} ${PACKAGE_SOURCE_FILES} ${LIBMIN_FILES})
 
 _LINK ( PROJECT ${PROJNAME} OPT ${LIBS_OPTIMIZED} DEBUG ${LIBS_DEBUG} PLATFORM ${LIBS_PLATFORM} )
