@@ -29,7 +29,7 @@ _REQUIRE_GL()
 
 _REQUIRE_GLEW()
 
-set(CMAKE_CUDA_ARCHITECTURES 89)   # 70=Volta, 75=Turing, 80=Ampere, 86=RTX 3x, 89=RTX 4x, 120=RTX 5x
+set(CMAKE_CUDA_ARCHITECTURES 120)   # 70=Volta, 75=Turing, 80=Ampere, 86=RTX 3x, 89=RTX 4x, 120=RTX 5x
 _REQUIRE_CUDA ( TRUE "source")
 
 #####################################################################################
