@@ -36,8 +36,17 @@ Steps:<br>
  ├── \flock2
  └── \libmin
 </pre>
-3. Run cmake or cmake-gui on flock2.<br>
+3. Run cmake on flock2.<br>
 4. Compile and run.
+
+### Linux Build
+1. Clone the flock2 and libmin repos as sibling folders.
+2. Modify the build.sh and set CUDA_PATH to your CUDA Toolkit location (run: which nvcc)
+3. Set the CUDA_ARCH to your GPU hardware arch.
+eg. 60=Pascal, 70=Volta, 75=Turing, 80=Ampere, 86=RTX 3x, 89=RTX 4x, 120=RTX 5x
+4. Run ./build.sh
+5. Run build/flock2
+6. For debugging/coding. Enable LINUX_DEBUG in build.sh. A VSCode launch.json has been provided to launch with debugging. We recommend to open VSCode to the \codes folder (not \codes\flock2), which gives you access to view/modify both \flock2 and \libmin.
 
 Let me know if you have any issues building.
 
