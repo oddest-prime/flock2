@@ -12,7 +12,6 @@ Message(STATUS "Project: ${PROJNAME}")
 set ( LIBMIN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../libmin" CACHE STRING "Location of Libmin")
 list( APPEND CMAKE_MODULE_PATH "${LIBMIN_ROOT}/cmake" )
 list( APPEND CMAKE_PREFIX_PATH "${LIBMIN_ROOT}/cmake" )
-
 find_package(Libmin)
 
 #####################################################################################
@@ -29,7 +28,6 @@ _REQUIRE_GL()
 
 _REQUIRE_GLEW()
 
-set(CMAKE_CUDA_ARCHITECTURES 120)   # 70=Volta, 75=Turing, 80=Ampere, 86=RTX 3x, 89=RTX 4x, 120=RTX 5x
 _REQUIRE_CUDA ( TRUE "source")
 
 #####################################################################################
@@ -57,10 +55,12 @@ source_group("CUDA" FILES ${CUDA_FILES} )
 #####################################################################################
 # Install Binaries
 #
-install_ptx ( FILES ${PTX_FILES} DESTINATION . )     # PTX
-install_files ( FILES ${PACKAGE_DLLS} DESTINATION . )    	# DLLs
-install ( FILES $<TARGET_PDB_FILE:${PROJNAME}> OPTIONAL DESTINATION .)   	# PDB
-install ( FILES ${INSTALL_LIST} DESTINATION .)				# EXE
+if(MSVC)
+  install ( FILES $<TARGET_PDB_FILE:${PROJNAME}> OPTIONAL DESTINATION .)   	# PDB
+endif()
+
+install_ptx ( FILES ${PTX_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )         # PTX
+install ( FILES ${INSTALL_LIST} DESTINATION .)			 # EXE
 
 ###########################
 # Done
