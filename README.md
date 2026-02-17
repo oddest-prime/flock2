@@ -24,7 +24,7 @@ Flock2 uses a *perceptual* model of social factors which projects the avoidance,
 Flock2 contains a low-level controller to model the Aerodynamic Forces of each bird. The low-level controller, [Flightsim](https://github.com/ramakarl/flightsim) (https://github.com/ramakarl/flightsim), is fully integrated into Flock2 and does not need to be compiled separately. This aerodynamic model includes lift, gravity and drag, and also exhibits features such as altitude loss during banking, speed changes when diving or climbing, angle-of-attack and stalls. Flightsim is a fixed-wing, single-body force model (SBFM) based on dynamic stability, which is more efficient and less complex that a full aircraft model that iterates over multiple control surfaces. See more details on the motivation and design of [Flightsim here](https://github.com/ramakarl/flightsim). 
 
 ## How to Build
-
+### Windows Build
 **Updated Nov 2025**<br>
 Build with cmake is now simpler and faster.<br>
 Libmin dependent code is now directly compiled with each project (no shared or static libs).<br>
@@ -40,6 +40,7 @@ Steps:<br>
 4. Compile and run.
 
 ### Linux Build
+**Updated Feb 2026**<br>
 1. Clone the flock2 and libmin repos as sibling folders.
 2. Modify the build.sh and set CUDA_PATH to your CUDA Toolkit location (run: which nvcc)
 3. Set the CUDA_ARCH to your GPU hardware arch.
