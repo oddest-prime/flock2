@@ -2793,7 +2793,7 @@ void Flock2::VisualizeClusters ()
 	// cluster information
 	sprintf ( msg, "cl."); drawText ( Vec2F(400, 30), msg, tc );
 	sprintf ( msg, "cnt"); drawText ( Vec2F(430, 30), msg, tc );
-	sprintf ( msg, "centroid (x/y/z)"); drawText ( Vec2F(460, 30), msg, tc );
+	sprintf ( msg, "centroid (x/y/z)"); drawText ( Vec2F(490, 30), msg, tc );
 	for (int i=0; i < MAX_FLOCKS; i++) {
 		if(cluster_histogram.at(i).bird_cnt > m_Params.num_birds * m_Params.cluster_minsize_color) {
 			clr = GenerateColorN(i, 10);
@@ -2801,7 +2801,7 @@ void Flock2::VisualizeClusters ()
 			sprintf ( msg, ">"); drawText ( Vec2F(380, 50 + 20*i), msg, clr );
 			sprintf ( msg, "%d", i ); drawText ( Vec2F(400, 50 + 20*i), msg, tc );
 			sprintf ( msg, "%d", cluster_histogram.at(i).bird_cnt ); drawText ( Vec2F(430, 50 + 20*i), msg, tc );
-			sprintf ( msg, " %.1f, %.1f, %.1f", m_Flock.flock_centers[i].x, m_Flock.flock_centers[i].y, m_Flock.flock_centers[i].z); drawText ( Vec2F(460, 50 + 20*i), msg, tc );
+			sprintf ( msg, " %.1f, %.1f, %.1f", m_Flock.flock_centers[i].x, m_Flock.flock_centers[i].y, m_Flock.flock_centers[i].z); drawText ( Vec2F(490, 50 + 20*i), msg, tc );
 			if(i == m_cluster_sel)
 			{
 				sprintf ( msg, "#"); drawText ( Vec2F(380, 50 + 20*i), msg, clr );
@@ -3770,6 +3770,7 @@ void Flock2::startup ()
 	auto tm = *std::localtime(&t);
 	oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S_") << setfill('0') << setw(3) << fractional_seconds;
     simulation_id = oss.str();
+	dbgprintf("simulation_id: %s\n", simulation_id.c_str());
 
 	addSearchPath (ASSET_PATH);
 
