@@ -8,20 +8,20 @@
 // * Derivative works may append the above copyright notice but should not remove or modify earlier notices.
 //
 // MIT License:
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-// associated documentation files (the "Software"), to deal in the Software without restriction, including without
-// limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
+// associated documentation files (the "Software"), to deal in the Software without restriction, including without 
+// limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, 
 // and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 // The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
 // OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
 #include <time.h>
-#include "main.h"					// window system
+#include "main.h"					// window system 
 #include "timex.h"				// for accurate timing
 #include "quaternion.h"
 #include "datax.h"
@@ -44,11 +44,11 @@ using namespace std;
 #define PLOT_RESX		2048
 #define PLOT_RESY		1200
 
-#define DEBUG_CUDA		false
+#define DEBUG_CUDA		false	
 //#define DEBUG_BIRD		7
 
 #include "gxlib.h"			// low-level render
-#include "g2lib.h"			// gui system
+//#include "g2lib.h"			// gui system
 using namespace glib;
 
 // Bird structures
@@ -60,7 +60,7 @@ struct ParamPtr {
   ParamPtr () {dt=' '; ptr = 0; }
 	ParamPtr (uchar t, int* p)	 { dt = t; ptr = (char*) p; }
 	ParamPtr (uchar t, float* p) { dt = t; ptr = (char*) p; }
-	ParamPtr (uchar t, Vec3F* p) { dt = t; ptr = (char*) p; }
+	ParamPtr (uchar t, Vec3F* p) { dt = t; ptr = (char*) p; }  
 	uchar dt;
 	char* ptr;
 } ;
@@ -88,8 +88,8 @@ struct graph_t {
 #define GRAPH_MAX		4
 
 // FFTW Analysis
-#ifdef USE_FFTW
-	#include <fftw3.3/fftw3.h>
+#ifdef BUILD_FFTW
+	#include <fftw3.3/fftw3.h>	
 #endif
 
 // VBO buffer ids
@@ -104,8 +104,8 @@ struct graph_t {
 // Renderable mesh
 struct RMesh {
 	RMesh() { for (int n=0; n < VBO_MAX; n++) mVBO[n] = VBO_NULL; }
-	std::string		name;
-	MeshX*				mesh;						// mesh geometry (cpu)
+	std::string		name;	
+	MeshX*				mesh;						// mesh geometry (cpu)	
 	GLint					mVBO[VBO_MAX];	// opengl VBO
 	int						vert_cnt;
 };
@@ -119,19 +119,19 @@ public:
 	virtual void startup ();
 	virtual void display();
 	virtual void reshape(int w, int h);
-	virtual void motion (AppEnum button, int x, int y, int dx, int dy);
+	virtual void motion (AppEnum button, int x, int y, int dx, int dy);	
 	virtual void keyboard(int keycode, AppEnum action, int mods, int x, int y);
-	virtual void mouse (AppEnum button, AppEnum state, int mods, int x, int y);
+	virtual void mouse (AppEnum button, AppEnum state, int mods, int x, int y);	
 	virtual void mousewheel(int delta);
 	virtual void shutdown();
 
 	// Simulation
 	Bird*			AddBird ( Vec3F pos, Vec3F vel, Vec3F target, float power );
 	void			DefaultParams();
-	void			SetupParams();
+	void			SetupParams();	
 	bool			SetParam(std::string name, float val, Vec3F vec);
 	void			LoadScene(std::string fname);
-	void			Reset (int num_bird, int num_pred);
+	void			Reset (int num_bird, int num_pred);	
 	void			Run ();
 	void			FindNeighbors ();
 	void 			AssignClusters ();
@@ -247,22 +247,22 @@ public:
 	std::vector< Vec4F >	m_lines;
 
 	// Stats - Frequency analysis
-	#ifdef USE_FFTW
+	#ifdef BUILD_FFTW
 		double*				m_samples;
 		double*				m_fftw_in;
-		int					m_fftw_N;
+		int						m_fftw_N;
 		fftw_plan			m_fftw_plan;
-		fftw_complex*		m_fftw_out;
-		float				m_fftw_energy[32767];
-		float				m_freq_grp[32767][4];
-		float				m_freq_gmin[4];
-		float				m_freq_gmax[4];
-		float				m_fftw_s1[32767];
-		float				m_fftw_s2[32767];
-		int					m_peak_cnt;
-		float				m_peak_ave;
-		float				m_peak_max;
-	#endif
+		fftw_complex* m_fftw_out;		
+		float					m_fftw_energy[32767];
+		float					m_freq_grp[32767][4];
+		float					m_freq_gmin[4];
+		float					m_freq_gmax[4];
+		float					m_fftw_s1[32767];
+		float					m_fftw_s2[32767];
+		int						m_peak_cnt;
+		float					m_peak_ave;
+		float					m_peak_max;
+	#endif			
 
 	// Experiment setup
 	int				m_run;
@@ -300,7 +300,7 @@ Flock2 obj;
 		std::string ptxfile = "flock_kernels.ptx";
 		std::string filepath;
 		if (!getFileLocation ( ptxfile, filepath )) {
-			printf ( "ERROR: Unable to find %s\n", ptxfile.c_str() );
+			printf ( "ERROR: CUDA kernel file not found: %s\n", ptxfile.c_str() ); 
 			exit(-7);
 		}
 		cuCheck ( cuModuleLoad ( &m_Module, filepath.c_str() ), (char*)"LoadKernel", (char*)"cuModuleLoad", (char*)"flock_kernels.ptx", DEBUG_CUDA );
@@ -395,7 +395,7 @@ void Flock2::DefaultParams ()
 	// SI units:
 	// vel = m/s, accel = m/s^2, mass = kg, thrust(power) = N (kg m/s^2)
 	//
-	m_Params.num_birds = 1000; // 	10000
+	m_Params.num_birds = (m_gpu) ? 10000 : 2000;
 	m_Params.num_predators = 1; //	0
 	m_Params.neighbors = 7;
 
@@ -1552,7 +1552,7 @@ void Flock2::StartNextRun ()
 {
 	// record the last run
 	// printf ( "run, num_run, val, #bird, #peaks, peak_ave, g0_min,g0_max, g1_min,g1_max, g2_min,g2_max, g3_min,g3_max\n" );
-	#ifdef USE_FFTW
+	#ifdef BUILD_FFTW
 		if (m_run >= 0) {
 		  fprintf ( m_runs_outfile, "%d,%d,%f, %d,%d,%f, %f, %f,%f, %f,%f, %f,%f, %f,%f\n", m_run, m_num_run, m_val.z, m_Params.num_birds, m_peak_cnt, m_peak_ave, m_peak_max,
 			  m_freq_gmin[0],m_freq_gmax[0], m_freq_gmin[1],m_freq_gmax[1], m_freq_gmin[2],m_freq_gmax[2], m_freq_gmin[3],m_freq_gmax[3] );
@@ -1582,7 +1582,7 @@ void Flock2::StartNextRun ()
 void Flock2::OutputFFTW ( int frame )
 {
 
-  #ifdef USE_FFTW
+  #ifdef BUILD_FFTW
 		Bird* b;
 		float ang_accel;
 		Vec4F c;
@@ -2506,7 +2506,7 @@ void Flock2::SelectBird (float x, float y)
 	Bird* b;
 
 	best_id = -1;
-	best_dist = 1e5;
+	best_dist = 10^5;
 
 	// find the bird nearest to camera ray
 	for (int i=0; i < m_Params.num_birds; i++) {
@@ -2880,7 +2880,7 @@ bool Flock2::init ()
 	m_rnd.seed(m_seed);
 
 	// Build FFTW arrays
-	#ifdef USE_FFTW
+	#ifdef BUILD_FFTW
 		m_fftw_N = 512;
 		m_fftw_in = (double*) malloc ( sizeof(double) * m_fftw_N );
 		m_fftw_out = (fftw_complex*) fftw_malloc ( sizeof(fftw_complex) * m_fftw_N);
@@ -3671,7 +3671,7 @@ void Flock2::startup ()
 
 void Flock2::shutdown()
 {
-  #ifdef USE_FFTW
+  #ifdef BUILD_FFTW
 	// destroy FFTW buffers
 	fftw_destroy_plan( m_fftw_plan);
 	fftw_free ( m_fftw_out );

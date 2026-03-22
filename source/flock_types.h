@@ -12,8 +12,8 @@
 	#define FGCELL			1
 	#define FGNDX			2
 	#define FPREDATOR		3
-	#define FGCELL_pred     4
-	#define FGNDX_pred      6
+	#define FGCELL_pred     	4
+	#define FGNDX_pred      	6
 
 	#define MAX_FLOCKS		16
 
@@ -25,8 +25,8 @@
 	#define AAUXSCAN1		4
 	#define AAUXARRAY2		5
 	#define AAUXSCAN2		6
-	#define AGRID_pred      9
-	#define AGRIDCNT_pred	10
+	#define AGRID_pred      	9
+	#define AGRIDCNT_pred		10
 
 	#define GRID_UNDEF							2147483647			// max int
 	#define SCAN_BLOCKSIZE						512

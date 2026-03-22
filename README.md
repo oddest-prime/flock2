@@ -23,15 +23,41 @@ Flock2 uses a *perceptual* model of social factors which projects the avoidance,
 ### Aerodynamic Model
 Flock2 contains a low-level controller to model the Aerodynamic Forces of each bird. The low-level controller, [Flightsim](https://github.com/ramakarl/flightsim) (https://github.com/ramakarl/flightsim), is fully integrated into Flock2 and does not need to be compiled separately. This aerodynamic model includes lift, gravity and drag, and also exhibits features such as altitude loss during banking, speed changes when diving or climbing, angle-of-attack and stalls. Flightsim is a fixed-wing, single-body force model (SBFM) based on dynamic stability, which is more efficient and less complex that a full aircraft model that iterates over multiple control surfaces. See more details on the motivation and design of [Flightsim here](https://github.com/ramakarl/flightsim). 
 
-### Quick Installation
-Platforms: Windows or Linux<br>
+## How to Build
+### Windows Build
+**Updated Nov 2025**<br>
+Build with cmake is now simpler and faster.<br>
+Libmin dependent code is now directly compiled with each project (no shared or static libs).<br>
 Steps:<br>
-1. Clone this repository locally.<br>
-2. Install Git (cmdline), Cmake and Visual Studio 2019 or higher.
-3. For GPU support (NVIDIA only), install CUDA Toolkit 10.2 or higher.<br>
-4. Run **build_all.bat** (Windows) or **build_all.sh** (Linux) for your platform.<br>
+1. Clone this flock2 repo<br>
+2. Clone <a href="https://github.com/ramakarl/libmin">libmin</a> as a sibling folder<br>
+<pre>
+\codes
+ ├── \flock2
+ └── \libmin
+</pre>
+3. Run cmake on flock2.<br>
+4. Compile and run.
 
-### Rama Carl Hoetzlein (c) 2023-2024. MIT License
-[https://ramakarl.com](https://ramakarl.com)
+### Linux Build
+**Updated Feb 2026**<br>
+1. Clone the flock2 and libmin repos as sibling folders.
+2. Modify the build.sh and set CUDA_PATH to your CUDA Toolkit location (run: which nvcc)
+3. Set the CUDA_ARCH to your GPU hardware arch.
+eg. 60=Pascal, 70=Volta, 75=Turing, 80=Ampere, 86=RTX 3x, 89=RTX 4x, 120=RTX 5x
+4. Run ./build.sh
+5. Run build/flock2
+6. For debugging/coding. Enable LINUX_DEBUG in build.sh. A VSCode launch.json has been provided for convenience in debugging. We recommend to open VSCode to the \codes folder (not \codes\flock2), which gives you access to view & modify both \flock2 and \libmin.
 
+Let me know if you have any issues building.
+
+## Contact
+Feel free to contact me if you have any questions, comments or suggestions:<br>
+**Rama Hoetzlein** <br>
+Website: <a href="https://ramakarl.com">ramakarl.com</a><br>
+Email: ramahoetzlein@gmail.com<br>
+
+## License & Copyright info
+MIT License.<br>
+Copyright 2023-2024 (c) Quanta Sciences & Rama Hoetzlein<br>
 
