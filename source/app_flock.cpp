@@ -139,6 +139,8 @@ public:
 	bool			SetParam(std::string name, float val, Vec3F vec);
 	void			LoadScene(std::string fname);
 	void			SaveParams(std::string fname);
+	void			DataOutputFileOpen(std::string fname);
+	void			DataOutputFileAppend();
 	void			Reset (int num_bird, int num_pred);	
 	void			Run ();
 	void			FindNeighbors ();
@@ -245,8 +247,11 @@ public:
 
 	RMesh			m_obj[4];
 
+	int				m_save_data;
+	FILE*			m_data_outfile = NULL;
+
 	// Stats - Output files
-	FILE*			m_runs_outfile;
+	FILE*			m_runs_outfile = NULL;
 
 	// Stats - Image plots
 	ImageX			m_plot[2];
@@ -461,7 +466,6 @@ void Flock2::DefaultParams ()
 	m_Params.max_predspeed = 22;				// m/s
 	m_Params.min_predspeed = 18;				// m/s
 	m_Params.pred_attack_amt = 0.1f;			// attacking amount
-	//m_Params.pred_flee_speed = m_Params.max_speed;	// bird speed to get away from predator
 	m_Params.avoid_pred_angular_amt = 0.08f;			// bird angular avoidance amount w.r.t. predator
 	m_Params.avoid_pred_power_amt = 0.08f;				// power avoidance amount (N) w.r.t. predator
 	m_Params.avoid_pred_power_ctr = 3;					// power avoidance center (N) w.r.t. predator
@@ -524,9 +528,20 @@ void Flock2::SetupParams()
 	m_ParamMap["gravity"] =								ParamPtr('v', &m_Params.gravity);
 	m_ParamMap["wind"] =								ParamPtr('v', &m_Params.wind);
 	m_ParamMap["fov_pred"] =							ParamPtr('f', &m_Params.fov_pred);
+
 	m_ParamMap["pred_radius"] =							ParamPtr('f', &m_Params.pred_radius);
-	m_ParamMap["pred_flee_speed"] =						ParamPtr('f', &m_Params.pred_flee_speed);
 	m_ParamMap["pred_mass"] =							ParamPtr('f', &m_Params.pred_mass);
+	m_ParamMap["max_predspeed"] =						ParamPtr('f', &m_Params.max_predspeed);
+	m_ParamMap["min_predspeed"] =						ParamPtr('f', &m_Params.min_predspeed);
+	m_ParamMap["pred_attack_amt"] =						ParamPtr('f', &m_Params.pred_attack_amt);
+	m_ParamMap["pred_flee_speed"] =						ParamPtr('f', &m_Params.pred_flee_speed);
+	m_ParamMap["avoid_pred_angular_amt"] =				ParamPtr('f', &m_Params.avoid_pred_angular_amt);
+	m_ParamMap["avoid_pred_power_amt"] =				ParamPtr('f', &m_Params.avoid_pred_power_amt);
+	m_ParamMap["avoid_pred_power_ctr"] =				ParamPtr('f', &m_Params.avoid_pred_power_ctr);
+
+	m_ParamMap["cluster_threshold_dist"] =				ParamPtr('f', &m_Params.cluster_threshold_dist);
+	m_ParamMap["cluster_minsize_color"] =				ParamPtr('f', &m_Params.cluster_minsize_color);
+
 	m_ParamMap["reynolds_avoidance"] =					ParamPtr('f', &m_Params.reynolds_avoidance);
 	m_ParamMap["reynolds_cohesion"] =					ParamPtr('f', &m_Params.reynolds_cohesion);
 	m_ParamMap["reynolds_alignment"] =  				ParamPtr('f', &m_Params.reynolds_alignment);
@@ -538,6 +553,7 @@ void Flock2::SetupParams()
 	m_ParamMap["grid"] =								ParamPtr('i', &m_viewgrid);
 	m_ParamMap["seed"] =								ParamPtr('i', &m_seed);
 	m_ParamMap["frame_terminate"] =						ParamPtr('i', &m_frame_terminate);
+	m_ParamMap["save_data"] =							ParamPtr('i', &m_save_data);
 }
 
 
@@ -636,6 +652,39 @@ void Flock2::SaveParams (std::string fname)
 	}
 
 	fclose(fp);
+}
+
+void Flock2::DataOutputFileOpen (std::string fname)
+{
+	if(!m_save_data)
+		return;
+
+	std::string filepath = fname + "_data.txt";
+
+	m_data_outfile = fopen(filepath.c_str(), "wt");
+	if (!m_data_outfile) {
+		dbgprintf("ERROR: Unable to open data file %s\n", fname.c_str());
+		exit(-19);
+		return;
+	}
+}
+
+void Flock2::DataOutputFileAppend ()
+{
+	if(m_data_outfile == NULL)
+		return;
+
+	int colored_clusters = 0;
+	
+	fprintf(m_data_outfile, "%d;", m_frame);
+
+	for (int i=0; i < MAX_FLOCKS; i++) {
+		fprintf(m_data_outfile, "%d;", cluster_histogram.at(i).bird_cnt);
+		if(cluster_histogram.at(i).bird_cnt > m_Params.num_birds * m_Params.cluster_minsize_color)
+			colored_clusters ++;
+	}
+	fprintf(m_data_outfile, "%d;", colored_clusters);
+	fprintf(m_data_outfile, "\n");
 }
 
 void Flock2::Reset (int num, int num_pred )
@@ -2825,9 +2874,10 @@ void Flock2::Run ()
 	//--- Outputs
 	// OutputPointCloudFiles ( m_frame );
 	// OutputPlot ( 0, m_frame );
-	if (m_analysis) {
+	if(m_analysis)
 		OutputFFTW ( m_frame );
-  }
+
+	DataOutputFileAppend();
 
 	#ifdef DEBUG_BIRD
 		DebugBird ( 7, "Post-Advance" );
@@ -2845,6 +2895,7 @@ void Flock2::Run ()
 	
 	if(m_frame == m_frame_terminate) // stop exectuion after specified number of frames
 	{
+		dbgprintf("INFO: Frame %d reached. Terminating (m_frame_terminate setting).", m_frame);
 		m_running = false;
 		pApp->m_running = false;
 	}
@@ -2908,10 +2959,12 @@ void Flock2::CameraToCockpit(int n )
 	m_cam->setDirection ( p, p + m_cam_fwd, -angs.x );
 }
 
-
-bool Flock2::init ()
+bool Flock2::init()
 {
 	int w = getWidth(), h = getHeight();			// window width &f height
+
+	SaveParams(simulation_id);
+	DataOutputFileOpen(simulation_id);
 
 	appSetVSync( false );
 
@@ -3728,11 +3781,11 @@ void Flock2::startup ()
 	m_viewgrid = 0;
 	m_seed = 12;
 	m_frame_terminate = 0;
+	m_save_data = 0;
 
 	// Default params
 	SetupParams();
 	DefaultParams();
-	SaveParams(simulation_id);
 
 	int w = 1920, h = 1080;
 	appStart ( "Flock2 (c) 2024 Hoetzlein - press H for help", "Flock2", w, h, 4, 2, 16, false );
@@ -3743,6 +3796,9 @@ void Flock2::startup ()
 void Flock2::shutdown()
 {
 	dbgprintf( "Flock2::shutdown() called.\n");
+	if(m_data_outfile != NULL)
+		fclose(m_data_outfile);
+
 
   #ifdef BUILD_FFTW
 	// destroy FFTW buffers
