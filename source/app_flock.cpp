@@ -21,7 +21,7 @@
 //
 
 #include <time.h>
-#include "main.h"					// window system 
+#include "main.h"				// window system 
 #include "timex.h"				// for accurate timing
 #include "quaternion.h"
 #include "datax.h"
@@ -33,8 +33,13 @@
 
 #include <fstream>
 #include <iostream>
+#include <chrono>
+#include <ctime>
+#include <ctime>
+#include <iomanip>
 #include <vector>
 #include <algorithm>
+
 
 using namespace std;
 
@@ -125,12 +130,15 @@ public:
 	virtual void mousewheel(int delta);
 	virtual void shutdown();
 
+	std::string		simulation_id;
+
 	// Simulation
 	Bird*			AddBird ( Vec3F pos, Vec3F vel, Vec3F target, float power );
 	void			DefaultParams();
 	void			SetupParams();	
 	bool			SetParam(std::string name, float val, Vec3F vec);
 	void			LoadScene(std::string fname);
+	void			SaveParams(std::string fname);
 	void			Reset (int num_bird, int num_pred);	
 	void			Run ();
 	void			FindNeighbors ();
@@ -525,7 +533,7 @@ void Flock2::SetupParams()
 	m_ParamMap["gpu"] =								ParamPtr('i', &m_gpu);
 	m_ParamMap["method"] =							ParamPtr('i', &m_method);
 	m_ParamMap["analysis"] =						ParamPtr('i', &m_analysis);
-  m_ParamMap["grid"] =								ParamPtr('i', &m_viewgrid );
+	m_ParamMap["grid"] =							ParamPtr('i', &m_viewgrid );
 }
 
 bool Flock2::SetParam (std::string name, float val, Vec3F vec)
@@ -534,9 +542,9 @@ bool Flock2::SetParam (std::string name, float val, Vec3F vec)
 	if (it != m_ParamMap.end()) {
 		ParamPtr p = it->second;
 		switch (p.dt) {
-		case 'i': *((int*) p.ptr) = int(val); break;
-		case 'f': *((float*) p.ptr) = val;		break;
-		case 'v': *((Vec3F*) p.ptr) = vec;		break;
+			case 'i': *((int*) p.ptr) = int(val);	break;
+			case 'f': *((float*) p.ptr) = val;		break;
+			case 'v': *((Vec3F*) p.ptr) = vec;		break;
 		};
 		return true;
 	}
@@ -546,13 +554,12 @@ bool Flock2::SetParam (std::string name, float val, Vec3F vec)
 
 void Flock2::on_arg (int i, std::string arg, std::string val)
 {
-	if (arg.compare("-i")==0)		{	LoadScene (val);	}								// input scene
-	if (arg.compare("-v")==0)		{	m_visualize = strToI ( val ); }						// visualization select
-	if (arg.compare("-g")==0)		{ m_gpu = strToI(val); }								// gpu enable. 0 = off, 1 = on
+	if (arg.compare("-i") == 0)		{ LoadScene (val); }									// input scene
+	if (arg.compare("-v") == 0)		{ m_visualize = strToI ( val ); }						// visualization select
+	if (arg.compare("-g") == 0)		{ m_gpu = strToI(val); }								// gpu enable. 0 = off, 1 = on
 	if (arg.compare("-m") == 0) 	{ m_method = strToI(val); }								// method select. 0 = Flock2 (Hoetzlein), 1 = Reynolds
 	if (arg.compare("-a") == 0) 	{ m_analysis = strToI(val); }							// analysis select. 0 = off, 1 = on
 	if (arg.compare("-d") == 0) 	{ m_viewgrid = strToI(val); }							// show grid
-
 }
 
 void Flock2::LoadScene (std::string fname)
@@ -599,6 +606,30 @@ void Flock2::LoadScene (std::string fname)
 	fclose(fp);
 
 	dbgprintf ( "LOADED OK. %d lines, %d params set.\n", lnum, pset);
+}
+
+void Flock2::SaveParams (std::string fname)
+{
+	std::string filepath = fname + "_params.txt";
+
+	FILE* fp = fopen(filepath.c_str(), "wt");
+	if (!fp) {
+		dbgprintf("ERROR: Unable to open params file %s\n", fname.c_str());
+		exit(-18);
+		return;
+	}
+
+	fprintf (fp, "# saved parameters for simulation run %s\n\n", fname.c_str());
+	for (auto it = m_ParamMap.begin(); it != m_ParamMap.end(); ++it) {
+		ParamPtr p = it->second;
+		switch (p.dt) {
+			case 'i': fprintf (fp, "%s: %d\n", it->first.c_str(), *((int*) p.ptr));	break;
+			case 'f': fprintf (fp, "%s: %f\n", it->first.c_str(), *((float*) p.ptr));	break;
+			case 'v': fprintf (fp, "%s: %f,%f,%f\n", it->first.c_str(), ((Vec3F*) p.ptr)->x, ((Vec3F*) p.ptr)->y, ((Vec3F*) p.ptr)->z);	break;
+		};
+	}
+
+	fclose(fp);
 }
 
 void Flock2::Reset (int num, int num_pred )
@@ -2506,7 +2537,7 @@ void Flock2::SelectBird (float x, float y)
 	Bird* b;
 
 	best_id = -1;
-	best_dist = 10^5;
+	best_dist = 100000;
 
 	// find the bird nearest to camera ray
 	for (int i=0; i < m_Params.num_birds; i++) {
@@ -3649,9 +3680,20 @@ void Flock2::reshape (int w, int h)
 
 void Flock2::startup ()
 {
+	// Generate ID of simulation based on time, to save config parameters and simulation values
+    std::ostringstream oss;
+	std::chrono::high_resolution_clock::time_point p = std::chrono::high_resolution_clock::now();
+	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(p.time_since_epoch());
+	std::chrono::seconds s = std::chrono::duration_cast<std::chrono::seconds>(ms);
+	std::time_t t = s.count();
+	std::size_t fractional_seconds = ms.count() % 1000;
+	auto tm = *std::localtime(&t);
+	oss << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S_") << setfill('0') << setw(3) << fractional_seconds;
+    simulation_id = oss.str();
+
 	addSearchPath (ASSET_PATH);
 
-		// Default config
+	// Default config
  	m_gpu = 1;
 	m_method = 0;			// 0 = Flock2, 1 = Reynolds
 	m_analysis = 0;			// 0 = off, 1 = analyze freq & energy
@@ -3662,6 +3704,7 @@ void Flock2::startup ()
 	// Default params
 	SetupParams();
 	DefaultParams();
+	SaveParams(simulation_id);
 
 	int w = 1920, h = 1080;
 	appStart ( "Flock2 (c) 2024 Hoetzlein - press H for help", "Flock2", w, h, 4, 2, 16, false );
