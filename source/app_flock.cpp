@@ -160,6 +160,7 @@ public:
 	// Rendering
 	void			SelectBird (float x, float y);
 	void			Graph ( int id, float y, Vec4F clr, Vec2F scal );
+	void			VisualizeFramenumber ();
 	void			VisualizeSelectedBird ();
 	void			VisualizePredators ();
 	void			VisualizeClusters ();
@@ -204,14 +205,15 @@ public:
 	int				m_start_frame;
 	int				m_end_frame;
 	int				m_rec_start, m_rec_step;
+	int				m_frame_terminate;			// stop execution after this number of frames
 
 	// Predators
 	DataX			m_Predators;
 	Vec3F			m_predcentroid;
 
 	// Configuration
-	int				m_gpu;							// gpu enable.	0 = off, 1 = on, default
-	int				m_method;						// method.			0 = Flock2(Hoetzlein), 1 = Reynolds boids
+	int				m_gpu;						// gpu enable.	0 = off, 1 = on, default
+	int				m_method;					// method.			0 = Flock2(Hoetzlein), 1 = Reynolds boids
 	int				m_analysis;					// analysis.		0 = off, 1 = on, energy & freq
 	int				m_visualize;				// visualize.		for possible values see flock_types.h, VISUALIZE_* defines
 	int				m_viewgrid;					// show grid.
@@ -233,13 +235,13 @@ public:
 	bool			m_draw_origin;
 	bool			m_draw_help;
 	bool			m_draw_clusters;
+	bool			m_draw_framenumber;
 	bool			m_draw_plot;
 	bool			m_calculate_clusters;
 	bool			m_kernels_loaded;
 	int				bird_index;
 	float			closest_bird;
 	int				bird_count = 0;
-	int				runcount = 0;
 
 	RMesh			m_obj[4];
 
@@ -488,53 +490,57 @@ void Flock2::SetupParams()
 	// create mappings from parameter name to variable in mem
 	m_ParamMap["steps"] =								ParamPtr('i', &m_Params.steps);
 	m_ParamMap["dt"] =									ParamPtr('f', &m_Params.DT);
-	m_ParamMap["num_birds"] =						ParamPtr('i', &m_Params.num_birds );
-	m_ParamMap["num_predators"] =				ParamPtr('i', &m_Params.num_predators);
-	m_ParamMap["neighbors"] =						ParamPtr('i', &m_Params.neighbors);
+	m_ParamMap["num_birds"] =							ParamPtr('i', &m_Params.num_birds );
+	m_ParamMap["num_predators"] =						ParamPtr('i', &m_Params.num_predators);
+	m_ParamMap["neighbors"] =							ParamPtr('i', &m_Params.neighbors);
 	m_ParamMap["mass"] =								ParamPtr('f', &m_Params.mass);
 	m_ParamMap["power"] =								ParamPtr('f', &m_Params.power);
-	m_ParamMap["min_speed"] =						ParamPtr('f', &m_Params.min_speed);
-	m_ParamMap["max_speed"] =						ParamPtr('f', &m_Params.max_speed);
-	m_ParamMap["min_power"] =						ParamPtr('f', &m_Params.min_power);
-	m_ParamMap["max_power"] =						ParamPtr('f', &m_Params.max_power);
-	m_ParamMap["fov"] =								  ParamPtr('f', &m_Params.fov);
-	m_ParamMap["wing_area"] =						ParamPtr('f', &m_Params.wing_area);
-	m_ParamMap["lift_factor"] =					ParamPtr('f', &m_Params.lift_factor);
-	m_ParamMap["drag_factor"] =					ParamPtr('f', &m_Params.drag_factor);
-	m_ParamMap["safe_radius"] =					ParamPtr('f', &m_Params.safe_radius);
-	m_ParamMap["boundary_cnt"] =				ParamPtr('f', &m_Params.boundary_cnt);
-	m_ParamMap["boundary_amt"] =				ParamPtr('f', &m_Params.boundary_amt);
-	m_ParamMap["avoid_angular_amt"] =		ParamPtr('f', &m_Params.avoid_angular_amt);
-	m_ParamMap["avoid_power_amt"] =			ParamPtr('f', &m_Params.avoid_power_amt);
-	m_ParamMap["align_amt"] =						ParamPtr('f', &m_Params.align_amt);
-	m_ParamMap["cohesion_amt"] =				ParamPtr('f', &m_Params.cohesion_amt);
-	m_ParamMap["pitch_decay"] =					ParamPtr('f', &m_Params.pitch_decay);
-	m_ParamMap["pitch_min"] =						ParamPtr('f', &m_Params.pitch_min);
-	m_ParamMap["pitch_max"] =						ParamPtr('f', &m_Params.pitch_max);
-	m_ParamMap["reaction_speed"] =			ParamPtr('f', &m_Params.reaction_speed);
-	m_ParamMap["dynamic_stability"] =		ParamPtr('f', &m_Params.dynamic_stability);
-	m_ParamMap["air_density"] =					ParamPtr('f', &m_Params.air_density);
-	m_ParamMap["front_area"] =					ParamPtr('f', &m_Params.front_area);
-	m_ParamMap["bound_soften"] =				ParamPtr('f', &m_Params.bound_soften);
-	m_ParamMap["avoid_ground_amt"] =		ParamPtr('f', &m_Params.avoid_ground_amt);
-	m_ParamMap["avoid_ground_power"] =	ParamPtr('f', &m_Params.avoid_ground_power);
-	m_ParamMap["avoid_ceil_amt"] =			ParamPtr('f', &m_Params.avoid_ceil_amt);
-	m_ParamMap["gravity"] =							ParamPtr('v', &m_Params.gravity);
+	m_ParamMap["min_speed"] =							ParamPtr('f', &m_Params.min_speed);
+	m_ParamMap["max_speed"] =							ParamPtr('f', &m_Params.max_speed);
+	m_ParamMap["min_power"] =							ParamPtr('f', &m_Params.min_power);
+	m_ParamMap["max_power"] =							ParamPtr('f', &m_Params.max_power);
+	m_ParamMap["fov"] =									ParamPtr('f', &m_Params.fov);
+	m_ParamMap["wing_area"] =							ParamPtr('f', &m_Params.wing_area);
+	m_ParamMap["lift_factor"] =							ParamPtr('f', &m_Params.lift_factor);
+	m_ParamMap["drag_factor"] =							ParamPtr('f', &m_Params.drag_factor);
+	m_ParamMap["safe_radius"] =							ParamPtr('f', &m_Params.safe_radius);
+	m_ParamMap["boundary_cnt"] =						ParamPtr('f', &m_Params.boundary_cnt);
+	m_ParamMap["boundary_amt"] =						ParamPtr('f', &m_Params.boundary_amt);
+	m_ParamMap["avoid_angular_amt"] =					ParamPtr('f', &m_Params.avoid_angular_amt);
+	m_ParamMap["avoid_power_amt"] =						ParamPtr('f', &m_Params.avoid_power_amt);
+	m_ParamMap["align_amt"] =							ParamPtr('f', &m_Params.align_amt);
+	m_ParamMap["cohesion_amt"] =						ParamPtr('f', &m_Params.cohesion_amt);
+	m_ParamMap["pitch_decay"] =							ParamPtr('f', &m_Params.pitch_decay);
+	m_ParamMap["pitch_min"] =							ParamPtr('f', &m_Params.pitch_min);
+	m_ParamMap["pitch_max"] =							ParamPtr('f', &m_Params.pitch_max);
+	m_ParamMap["reaction_speed"] =						ParamPtr('f', &m_Params.reaction_speed);
+	m_ParamMap["dynamic_stability"] =					ParamPtr('f', &m_Params.dynamic_stability);
+	m_ParamMap["air_density"] =							ParamPtr('f', &m_Params.air_density);
+	m_ParamMap["front_area"] =							ParamPtr('f', &m_Params.front_area);
+	m_ParamMap["bound_soften"] =						ParamPtr('f', &m_Params.bound_soften);
+	m_ParamMap["avoid_ground_amt"] =					ParamPtr('f', &m_Params.avoid_ground_amt);
+	m_ParamMap["avoid_ground_power"] =					ParamPtr('f', &m_Params.avoid_ground_power);
+	m_ParamMap["avoid_ceil_amt"] =						ParamPtr('f', &m_Params.avoid_ceil_amt);
+	m_ParamMap["gravity"] =								ParamPtr('v', &m_Params.gravity);
 	m_ParamMap["wind"] =								ParamPtr('v', &m_Params.wind);
-	m_ParamMap["fov_pred"] =						ParamPtr('f', &m_Params.fov_pred);
-	m_ParamMap["pred_radius"] =					ParamPtr('f', &m_Params.pred_radius);
-	m_ParamMap["pred_flee_speed"] =			ParamPtr('f', &m_Params.pred_flee_speed);
-	m_ParamMap["pred_mass"] =						ParamPtr('f', &m_Params.pred_mass);
-	m_ParamMap["reynolds_avoidance"] =	ParamPtr('f', &m_Params.reynolds_avoidance);
-	m_ParamMap["reynolds_cohesion"] =		ParamPtr('f', &m_Params.reynolds_cohesion);
-	m_ParamMap["reynolds_alignment"] =  ParamPtr('f', &m_Params.reynolds_alignment);
+	m_ParamMap["fov_pred"] =							ParamPtr('f', &m_Params.fov_pred);
+	m_ParamMap["pred_radius"] =							ParamPtr('f', &m_Params.pred_radius);
+	m_ParamMap["pred_flee_speed"] =						ParamPtr('f', &m_Params.pred_flee_speed);
+	m_ParamMap["pred_mass"] =							ParamPtr('f', &m_Params.pred_mass);
+	m_ParamMap["reynolds_avoidance"] =					ParamPtr('f', &m_Params.reynolds_avoidance);
+	m_ParamMap["reynolds_cohesion"] =					ParamPtr('f', &m_Params.reynolds_cohesion);
+	m_ParamMap["reynolds_alignment"] =  				ParamPtr('f', &m_Params.reynolds_alignment);
 
-	m_ParamMap["visualize"]	=						ParamPtr('i', &m_visualize);
-	m_ParamMap["gpu"] =								ParamPtr('i', &m_gpu);
-	m_ParamMap["method"] =							ParamPtr('i', &m_method);
-	m_ParamMap["analysis"] =						ParamPtr('i', &m_analysis);
-	m_ParamMap["grid"] =							ParamPtr('i', &m_viewgrid );
+	m_ParamMap["gpu"] =									ParamPtr('i', &m_gpu);
+	m_ParamMap["method"] =								ParamPtr('i', &m_method);
+	m_ParamMap["analysis"] =							ParamPtr('i', &m_analysis);
+	m_ParamMap["visualize"]	=							ParamPtr('i', &m_visualize);
+	m_ParamMap["grid"] =								ParamPtr('i', &m_viewgrid);
+	m_ParamMap["seed"] =								ParamPtr('i', &m_seed);
+	m_ParamMap["frame_terminate"] =						ParamPtr('i', &m_frame_terminate);
 }
+
+
 
 bool Flock2::SetParam (std::string name, float val, Vec3F vec)
 {
@@ -2589,7 +2595,9 @@ void Flock2::VisualizePredators ()
 	for (int n = 0; n < m_Predators.GetNumElem(FPREDATOR); n++) {
 		p = (Predator*)m_Predators.GetElem(FPREDATOR, n);
 
-		if(p->currentState == ATTACK)
+		if(m_Params.num_predators <= n)
+			sprintf ( msg, "predator %d disabled", n );
+		else if(p->currentState == ATTACK)
 			sprintf ( msg, "predator %d currentState = ATTACK", n );
 		else if(p->currentState == HOVER)
 			sprintf ( msg, "predator %d currentState = HOVER", n );
@@ -2754,8 +2762,21 @@ void Flock2::VisualizeClusters ()
 //			drawCircle3D(m_Flock.flock_centers[i], 1.5, Vec4F(Vec4F(1.0, 0.8, 0.0, 1)));
 		}
 	}
+}
 
+void Flock2::VisualizeFramenumber ()
+{
+	if(!m_draw_framenumber)
+		return;
 
+	int w = getWidth(), h = getHeight();
+
+	char msg[1024];
+	Vec4F tc (1,1,1,1);
+	Vec4F clr;
+
+	// cluster information
+	sprintf ( msg, "frame: %d", m_frame); drawText ( Vec2F(w - 200, 30), msg, tc );
 }
 
 
@@ -2820,10 +2841,13 @@ void Flock2::Run ()
 	// PERF_POP();
 
 	m_time += m_Params.DT;
-	m_frame++;
-
-	runcount += 1;
-
+	m_frame ++;
+	
+	if(m_frame == m_frame_terminate) // stop exectuion after specified number of frames
+	{
+		m_running = false;
+		pApp->m_running = false;
+	}
 }
 
 
@@ -2899,6 +2923,7 @@ bool Flock2::init ()
 	m_draw_grid = false;
 	m_draw_origin = false;
 	m_draw_help = false;
+	m_draw_framenumber = true;
 	m_draw_clusters = true;
 	m_calculate_clusters = true;
 	m_cam_mode = 0;
@@ -3440,6 +3465,9 @@ void Flock2::display ()
 
 		clr = Vec4F(0,0,0,1);
 
+		// Visualize framenumber (Text block only)
+		VisualizeFramenumber ();
+
 		// Visualize selected bird
 		VisualizeSelectedBird ();
 
@@ -3640,7 +3668,7 @@ void Flock2::keyboard(int keycode, AppEnum action, int mods, int x, int y)
 		//m_cam_orient =
 		break;
 	case 'r': Reset( m_Params.num_birds, m_Params.num_predators); break;
-	case ' ':	m_running = !m_running;	break;
+	case ' ': m_running = !m_running;	break;
 	case 'z':
 		m_bird_sel--;
 		if (m_bird_sel < 0) m_bird_sel = 0;
@@ -3664,7 +3692,6 @@ void Flock2::keyboard(int keycode, AppEnum action, int mods, int x, int y)
 		m_cluster_sel = -1;
 		break;
 	};
-	// printf ( "%d \n", m_bird_sel );
 }
 
 void Flock2::reshape (int w, int h)
@@ -3695,11 +3722,12 @@ void Flock2::startup ()
 
 	// Default config
  	m_gpu = 1;
-	m_method = 0;			// 0 = Flock2, 1 = Reynolds
-	m_analysis = 0;			// 0 = off, 1 = analyze freq & energy
+	m_method = 0;							// 0 = Flock2, 1 = Reynolds
+	m_analysis = 0;							// 0 = off, 1 = analyze freq & energy
 	m_visualize = VISUALIZE_CLUSTERS;		// for possible values see flock_types.h, VISUALIZE_* defines
 	m_viewgrid = 0;
 	m_seed = 12;
+	m_frame_terminate = 0;
 
 	// Default params
 	SetupParams();
@@ -3714,6 +3742,8 @@ void Flock2::startup ()
 
 void Flock2::shutdown()
 {
+	dbgprintf( "Flock2::shutdown() called.\n");
+
   #ifdef BUILD_FFTW
 	// destroy FFTW buffers
 	fftw_destroy_plan( m_fftw_plan);
