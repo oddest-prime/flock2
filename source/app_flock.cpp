@@ -659,7 +659,7 @@ void Flock2::DataOutputFileOpen (std::string fname)
 	if(!m_save_data)
 		return;
 
-	std::string filepath = fname + "_data.txt";
+	std::string filepath = fname + "_data.csv";
 
 	m_data_outfile = fopen(filepath.c_str(), "wt");
 	if (!m_data_outfile) {
@@ -676,14 +676,14 @@ void Flock2::DataOutputFileAppend ()
 
 	int colored_clusters = 0;
 	
-	fprintf(m_data_outfile, "%d;", m_frame);
+	fprintf(m_data_outfile, "%d,", m_frame);
 
 	for (int i=0; i < MAX_FLOCKS; i++) {
-		fprintf(m_data_outfile, "%d;", cluster_histogram.at(i).bird_cnt);
+		fprintf(m_data_outfile, "%d,", cluster_histogram.at(i).bird_cnt);
 		if(cluster_histogram.at(i).bird_cnt > m_Params.num_birds * m_Params.cluster_minsize_color)
 			colored_clusters ++;
 	}
-	fprintf(m_data_outfile, "%d;", colored_clusters);
+	fprintf(m_data_outfile, "%d,", colored_clusters);
 	fprintf(m_data_outfile, "\n");
 }
 

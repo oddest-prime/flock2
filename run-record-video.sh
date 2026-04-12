@@ -3,8 +3,9 @@
 # Dependencies:
 #   apt install xvfb tmux ffmpeg
 
-RUN_TIMEOUT=10000
-DISP_NUM=42
+RUN_TIMEOUT=1000
+DISP_NUM=43
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 pushd ./build
 
@@ -18,7 +19,7 @@ tmux new-session -d -s VideoRecording$DISP_NUM "ffmpeg -draw_mouse 0 -framerate 
 #tmux new-session -d -s VideoRecording$DISP_NUM "ffmpeg -draw_mouse 0 -framerate 15 -f x11grab -video_size 1920x1080 -i :$DISP_NUM -codec:v mpeg2video -b:v 6000k /tmp/video.mp4" &
 #tmux new-session -d -s VideoRecording$DISP_NUM "ffmpeg -framerate 15 -f x11grab -video_size 1920x1080 -i :$DISP_NUM -codec:v libx264 -b:v 6000k /tmp/video.mp4" &
 sleep 1
-R_PID=`pgrep -f "flock2"`
+R_PID=`pgrep -x "flock2"`
 for i in `seq 1 $RUN_TIMEOUT`
 do
     kill -0 $R_PID 2>/dev/null || break;
@@ -42,9 +43,12 @@ wait
 sleep 2
 
 SIMULATION_ID=`grep "simulation_id: " /tmp/flock2.stdout | cut -d " " -f 2`
-mv /tmp/flock2.stdout ./${SIMULATION_ID}_stdout.txt
-mv /tmp/flock2.stderr ./${SIMULATION_ID}_stderr.txt
-mv /tmp/video.mp4 ./${SIMULATION_ID}_video.mp4
+mkdir -p $SCRIPT_DIR/run-outputs
+mv /tmp/flock2.stdout $SCRIPT_DIR/run-outputs/${SIMULATION_ID}_stdout.txt
+mv /tmp/flock2.stderr $SCRIPT_DIR/run-outputs/${SIMULATION_ID}_stderr.txt
+mv /tmp/video.mp4 $SCRIPT_DIR/run-outputs/${SIMULATION_ID}_video.mp4
+mv ./${SIMULATION_ID}*.txt $SCRIPT_DIR/run-outputs/.
+mv ./${SIMULATION_ID}*.csv $SCRIPT_DIR/run-outputs/.
 
 popd
 

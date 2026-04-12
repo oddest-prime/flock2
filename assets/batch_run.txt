@@ -1,5 +1,5 @@
 #num_birds: 500
 num_predators: 0
-frame_terminate: 5000
+frame_terminate: 25000
 save_data: 1
 

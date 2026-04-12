@@ -1,2 +1,8 @@
-
 /build/
+run-outputs/*.txt
+run-outputs/*.csv
+run-outputs/*.png
+run-outputs/*.mp4
+
+
+
