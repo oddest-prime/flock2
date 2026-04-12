@@ -414,6 +414,9 @@ void Flock2::DefaultParams ()
 	m_Params.num_predators = 1; //	0
 	m_Params.neighbors = 7;
 
+	m_Params.spawn_predators = 0; 					// automatically add this number of pedators ...
+	m_Params.spawn_predators_frame = 0; 				// ... at this frame
+
 	m_Params.steps = 2;
 	m_Params.DT = 0.005;						// timestep (sec), .005 = 5 msec = 200 hz
 
@@ -496,6 +499,8 @@ void Flock2::SetupParams()
 	m_ParamMap["dt"] =									ParamPtr('f', &m_Params.DT);
 	m_ParamMap["num_birds"] =							ParamPtr('i', &m_Params.num_birds );
 	m_ParamMap["num_predators"] =						ParamPtr('i', &m_Params.num_predators);
+	m_ParamMap["spawn_predators"] =						ParamPtr('i', &m_Params.spawn_predators);
+	m_ParamMap["spawn_predators_frame"] =						ParamPtr('i', &m_Params.spawn_predators_frame);
 	m_ParamMap["neighbors"] =							ParamPtr('i', &m_Params.neighbors);
 	m_ParamMap["mass"] =								ParamPtr('f', &m_Params.mass);
 	m_ParamMap["power"] =								ParamPtr('f', &m_Params.power);
@@ -684,6 +689,7 @@ void Flock2::DataOutputFileAppend ()
 			colored_clusters ++;
 	}
 	fprintf(m_data_outfile, "%d,", colored_clusters);
+	fprintf(m_data_outfile, "%d,", m_Params.num_predators);
 	fprintf(m_data_outfile, "\n");
 }
 
@@ -2892,6 +2898,11 @@ void Flock2::Run ()
 
 	m_time += m_Params.DT;
 	m_frame ++;
+	
+	if(m_frame == 1 && m_Params.spawn_predators_frame != 0)
+		m_Params.num_predators = 0;
+	if(m_frame == m_Params.spawn_predators_frame)
+		m_Params.num_predators += m_Params.spawn_predators;
 	
 	if(m_frame == m_frame_terminate) // stop exectuion after specified number of frames
 	{

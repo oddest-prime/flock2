@@ -151,6 +151,9 @@
 		int			num_birds;
 		int			num_predators;
 		int			neighbors;
+		int			spawn_predators;
+		int			spawn_predators_frame;
+
 		float		DT;
 		float		mass;
 		float		power;
