@@ -3,9 +3,10 @@
 	#define DEF_FLOCK_TYPES
 
 	#define VISUALIZE_REALISTIC			0
-	#define VISUALIZE_BLACK_WHITE		1
+	#define VISUALIZE_BLACK_WHITE			1
 	#define VISUALIZE_INFOVIS			2
-	#define VISUALIZE_CLUSTERS			3
+	#define VISUALIZE_CLUSTERS			3 	// color subflocks in different colors
+	#define VISUALIZE_PREDATOR			4	// color birds under the influence of predator different
 
 	// Particle data
 	#define FBIRD			0

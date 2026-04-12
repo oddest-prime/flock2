@@ -3320,8 +3320,13 @@ void Flock2::RenderBirdsWithDart ()
 		  clr = Vec4F(0.9, 0.5, 0.5, 1);
           }
         }
+		if (m_visualize == VISUALIZE_PREDATOR) {	// predator attacking coloring..
+		  //clr = Vec4F(1.0, 0.0, 0.0, 1);
+		  clr = b->clr;
+          
+        }
 		// bird shape
-		if (m_visualize == VISUALIZE_INFOVIS || m_visualize == VISUALIZE_CLUSTERS) {
+		if (m_visualize == VISUALIZE_INFOVIS || m_visualize == VISUALIZE_CLUSTERS || m_visualize == VISUALIZE_PREDATOR) {
 			// line
 			drawLine3D(b->pos, b->pos + (b->vel * bird_size), clr);
 		}
@@ -3352,6 +3357,7 @@ void Flock2::drawBackground ()
 		break;
 	case VISUALIZE_INFOVIS:
 	case VISUALIZE_CLUSTERS:
+	case VISUALIZE_PREDATOR:
 		// infovis - green angular accel
 		drawFill(Vec2F(0, 0), Vec2F(w, h), Vec4F(.4, .4, .4, 1));
 		break;
@@ -3484,7 +3490,7 @@ void Flock2::display ()
 			}
 
 			// Draw centroid
-			if (m_visualize == VISUALIZE_INFOVIS || m_visualize == VISUALIZE_CLUSTERS) {
+			if (m_visualize == VISUALIZE_INFOVIS || m_visualize == VISUALIZE_CLUSTERS || m_visualize == VISUALIZE_PREDATOR) {
 				drawCircle3D(m_Flock.centroid, 0.5, Vec4F(Vec4F(0.8, 1.0, 0.0, 1)));
 				drawCircle3D(m_Flock.centroid, 1.5, Vec4F(Vec4F(0.8, 1.0, 0.0, 1)));
 
@@ -3714,7 +3720,7 @@ void Flock2::keyboard(int keycode, AppEnum action, int mods, int x, int y)
 		Reset ( m_Params.num_birds, m_Params.num_predators);
 		break;
 	case 'v':
-		if (++m_visualize > VISUALIZE_CLUSTERS ) m_visualize = 0;
+		if (++m_visualize > VISUALIZE_PREDATOR ) m_visualize = 0;
 		break;
 	case 's':
 		if (++m_draw_mesh > 2 ) m_draw_mesh = 0;

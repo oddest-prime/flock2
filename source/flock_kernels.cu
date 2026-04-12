@@ -443,7 +443,7 @@ extern "C" __global__ void advanceOrientationHoetzlein ( float time, float dt, f
 
 		// Rule 5. Bird-Predators avoidance
 		// (from Noortje Hagelaars, based on CPU version, 2024)
-		/* Predator* p;
+		Predator* p;
 		for (int m = 0; m < FParams.num_predators; m++) {
 
 			p = (Predator*) FPredators.data(FPREDATOR) + m;
@@ -458,9 +458,9 @@ extern "C" __global__ void advanceOrientationHoetzlein ( float time, float dt, f
 				predatorDist = fmax(1.0f, fmin(predatorDist * predatorDist, 100.0f));
 				b->target.z -= yaw * FParams.avoid_pred_angular_amt; // / predatorDist;
 				b->target.y -= pitch * FParams.avoid_pred_angular_amt; // / predatorDist;
-				b->clr = make_float4(1, 0, 1, 1);
+				b->clr = make_float4(0, 0, 1, 1);
 			}
-		}	 */
+		}
 	}
 
 	//-------------- FLIGHT MODEL

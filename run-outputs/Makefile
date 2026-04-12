@@ -77,7 +77,7 @@ nflocks_stats.png: combined_logs.csv Makefile
 		 \n\
 		set term pngcairo size 1024,768 \n\
 		set grid \n\
-		set title \"multiple runs with predator after frame 5000\" noenhanced \n\
+		set title \"multiple runs compared\" noenhanced \n\
 		set xlabel \"Time [framenumer]\" \n\
 		set ylabel \"Number of subflocks\" \n\
 		set yrange [0:15] \n\
@@ -88,7 +88,7 @@ nflocks_stats.png: combined_logs.csv Makefile
 			\"$<\" using (column(1)):(column(16)) with lines linecolor rgb '#33AAAAAA' title '20percentile' noenhanced, \
 			\"$<\" using (column(1)):(column(17)) with lines linecolor rgb '#33AAAAAA' title '80percentile' noenhanced, \
 			\"$<\" using (column(1)):(column(16)):(column(17)) with filledcurves linecolor rgb '#AAAAAAAA' notitle noenhanced, \
-			\"$<\" using (column(1)):(column(14)) with lines linecolor rgb '#BB0000' title 'med' noenhanced" \
+			\"$<\" using (column(1)):(column(14)) with lines linecolor rgb '#0000BB' title 'med' noenhanced" \
 	 | gnuplot
 
 nflocks_combined.png: combined_logs.csv Makefile
