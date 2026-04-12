@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export CUDA_PATH=/usr/local/cuda-13.2
 export CUDA_ARCH=90
