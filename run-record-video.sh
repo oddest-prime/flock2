@@ -44,6 +44,7 @@ sleep 2
 
 SIMULATION_ID=`grep "simulation_id: " /tmp/flock2.stdout | cut -d " " -f 2`
 mkdir -p $SCRIPT_DIR/run-outputs
+mkdir cp $SCRIPT_DIR/plotting $SCRIPT_DIR/run-outputs/.
 mv /tmp/flock2.stdout $SCRIPT_DIR/run-outputs/${SIMULATION_ID}_stdout.txt
 mv /tmp/flock2.stderr $SCRIPT_DIR/run-outputs/${SIMULATION_ID}_stderr.txt
 mv /tmp/video.mp4 $SCRIPT_DIR/run-outputs/${SIMULATION_ID}_video.mp4

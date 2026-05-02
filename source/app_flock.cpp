@@ -681,17 +681,39 @@ void Flock2::DataOutputFileAppend ()
 	if(m_data_outfile == NULL)
 		return;
 
+	Predator* p;
 	int colored_clusters = 0;
 	
 	fprintf(m_data_outfile, "%d,", m_frame);
 
+	// cluster stats
 	for (int i=0; i < MAX_FLOCKS; i++) {
 		fprintf(m_data_outfile, "%d,", cluster_histogram.at(i).bird_cnt);
 		if(cluster_histogram.at(i).bird_cnt > m_Params.num_birds * m_Params.cluster_minsize_color)
 			colored_clusters ++;
 	}
 	fprintf(m_data_outfile, "%d,", colored_clusters);
+	// predator stats
 	fprintf(m_data_outfile, "%d,", m_Params.num_predators);
+	p = (Predator*)m_Predators.GetElem(FPREDATOR, 0);
+	if(p->currentState == ATTACK)
+  	fprintf(m_data_outfile, "1,");
+	else if(p->currentState == HOVER)
+  	fprintf(m_data_outfile, "2,");
+	else if(p->currentState == FOLLOW)
+  	fprintf(m_data_outfile, "3,");
+	else
+  	fprintf(m_data_outfile, "-1,");
+	fprintf(m_data_outfile, "%4.3f,", p->speed);
+	// average bird stats
+	fprintf(m_data_outfile, "%4.3f,", m_Flock.Plift);
+	fprintf(m_data_outfile, "%4.3f,", m_Flock.Pdrag);
+	fprintf(m_data_outfile, "%4.3f,", m_Flock.Pfwd);
+	fprintf(m_data_outfile, "%4.3f,", m_Flock.Pturn);
+	fprintf(m_data_outfile, "%4.3f,", m_Flock.Ptotal);
+	fprintf(m_data_outfile, "%4.3f,", m_Flock.speed);
+
+
 	fprintf(m_data_outfile, "\n");
 }
 
@@ -765,10 +787,12 @@ void Flock2::Reset (int num, int num_pred )
 
 	for (int n = 0; n < numPoints_pred; n++) {
 		// randomly distribute predators
-		pos = m_rnd.randV3(-50, 50);
+		//pos = m_rnd.randV3(-50, 50);
+		pos = Vec3F(0, 100, 0);
 		pos.y = pos.y * .5f + 50;
 		vel = m_rnd.randV3(-20, 20);
-		h = m_rnd.randF(-180, 180);
+		//h = m_rnd.randF(-180, 180);
+		h = 180;
 
 		//p = AddPredator(Vec3F(n+1, 0, 0), Vec3F(0, 0, 0), Vec3F(0, 0, h), 3);				// add static predator; (0,0,0) for pos does not work
 		p = AddPredator(pos, vel, Vec3F(0, 0, h), 3);
@@ -2669,7 +2693,7 @@ void Flock2::VisualizePredators ()
 		drawText ( Vec2F(10, 30 + 40 + 20*n), msg, tc );
 		sprintf ( msg, "target: x= %4.1f  y= %4.1f  z= %4.1f ", p->target.x, p->target.y, p->target.z );
 		drawText ( Vec2F(10, 30 + 60 + 20*n), msg, tc );
-		sprintf ( msg, "speed: %4.1f ", p->speed );
+		sprintf ( msg, "speed: %4.1f m/s", p->speed );
 		drawText ( Vec2F(10, 30 + 80 + 20*n), msg, tc );
 
 		auto dirj = m_Flock.centroid - p->pos;
@@ -2677,6 +2701,8 @@ void Flock2::VisualizePredators ()
 		sprintf ( msg, "distance: %4.1f ", dist );
 		drawText ( Vec2F(10, 30 + 100 + 20*n), msg, tc );
 	}
+	sprintf ( msg, "avg. bird speed: %4.1f m/s", m_Flock.speed );
+	drawText ( Vec2F(10, 30 + 130), msg, tc );
 }
 
 void Flock2::VisualizeSelectedBird ()
@@ -3491,11 +3517,13 @@ void Flock2::display ()
 				drawFace3D( Vec3F(m_Accel.bound_min.x, 0, m_Accel.bound_min.z), Vec3F(m_Accel.bound_min.x, 0, m_Accel.bound_max.z), Vec3F(m_Accel.bound_max.x, 0, m_Accel.bound_max.z), Vec3F(m_Accel.bound_max.x, 0, m_Accel.bound_min.z), Vec3F(0, 1, 0), Vec4F(0.5,0.5,0.5,0.3) );
 			}
 
-			// Draw centroid
+			// Draw centroids
 			if (m_visualize == VISUALIZE_INFOVIS || m_visualize == VISUALIZE_CLUSTERS || m_visualize == VISUALIZE_PREDATOR) {
-				drawCircle3D(m_Flock.centroid, 0.5, Vec4F(Vec4F(0.8, 1.0, 0.0, 1)));
-				drawCircle3D(m_Flock.centroid, 1.5, Vec4F(Vec4F(0.8, 1.0, 0.0, 1)));
+			  // global centroid
+				//drawCircle3D(m_Flock.centroid, 0.5, Vec4F(Vec4F(0.8, 1.0, 0.0, 1)));
+				//drawCircle3D(m_Flock.centroid, 1.5, Vec4F(Vec4F(0.8, 1.0, 0.0, 1)));
 
+			  // flock centroids
 				for (int i=0; i < MAX_FLOCKS; i++) {
 	  			  	if(cluster_histogram.at(i).bird_cnt > m_Params.num_birds * m_Params.cluster_minsize_color) {
 						drawCircle3D(m_Flock.flock_centers[i], 0.5, Vec4F(Vec4F(1.0, 0.8, 0.0, 1)));

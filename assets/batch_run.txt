@@ -1,16 +1,28 @@
-#num_birds: 500
-num_predators: 1
-frame_terminate: 150000
 save_data: 1
-spawn_predators: 1
-spawn_predators_frame: 5000
+frame_terminate: 150000
+
+num_birds: 10000
+
+num_predators: 1
 min_predspeed: 50
 max_predspeed: 60
 avoid_pred_angular_amt: 0.8
-pred_radius: 20.0
+# pred_radius: 20.0
+pred_radius: 80.0
+
+spawn_predators: 1
+# settling period: about 20000; mid of simulation 80000
+spawn_predators_frame: 80000
 
 # default: 300
 # zoomed in: 150
 view_orbit_dist: 150
+
+# VISUALIZE_REALISTIC: 0
+# VISUALIZE_BLACK_WHITE: 1
+# VISUALIZE_INFOVIS: 2          // orange/green density waves + color birds under the influence of predator different
+# VISUALIZE_CLUSTERS: 3         // color subflocks in different colors
+# VISUALIZE_PREDATOR: 4	        // color birds under the influence of predator different
+visualize: 2
 
 
