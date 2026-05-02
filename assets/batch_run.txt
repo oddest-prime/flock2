@@ -1,6 +1,6 @@
 #num_birds: 500
 num_predators: 1
-frame_terminate: 25000
+frame_terminate: 150000
 save_data: 1
 spawn_predators: 1
 spawn_predators_frame: 5000
@@ -8,4 +8,9 @@ min_predspeed: 50
 max_predspeed: 60
 avoid_pred_angular_amt: 0.8
 pred_radius: 20.0
+
+# default: 300
+# zoomed in: 150
+view_orbit_dist: 150
+
 

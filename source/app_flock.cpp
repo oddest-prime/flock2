@@ -208,6 +208,7 @@ public:
 	int				m_end_frame;
 	int				m_rec_start, m_rec_step;
 	int				m_frame_terminate;			// stop execution after this number of frames
+	int       m_view_orbit_dist;
 
 	// Predators
 	DataX			m_Predators;
@@ -559,6 +560,7 @@ void Flock2::SetupParams()
 	m_ParamMap["seed"] =								ParamPtr('i', &m_seed);
 	m_ParamMap["frame_terminate"] =						ParamPtr('i', &m_frame_terminate);
 	m_ParamMap["save_data"] =							ParamPtr('i', &m_save_data);
+	m_ParamMap["view_orbit_dist"] =							ParamPtr('i', &m_view_orbit_dist);
 }
 
 
@@ -3042,7 +3044,7 @@ bool Flock2::init()
 	m_cam = new Camera3D;
 	m_cam->setFov ( 70 );
 	m_cam->setNearFar ( 1.0, 100000 );
-	m_cam->SetOrbit ( Vec3F(-30,30,0), Vec3F(0,50,0), 300, 1 );
+	m_cam->SetOrbit ( Vec3F(-30,30,0), Vec3F(0,50,0), m_view_orbit_dist, 1 );
 
 	// Initialize experimental setup
 	//
@@ -3800,6 +3802,7 @@ void Flock2::startup ()
 	m_seed = 12;
 	m_frame_terminate = 0;
 	m_save_data = 0;
+	m_view_orbit_dist = 300;
 
 	// Default params
 	SetupParams();

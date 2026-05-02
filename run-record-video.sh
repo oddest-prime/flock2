@@ -3,7 +3,7 @@
 # Dependencies:
 #   apt install xvfb tmux ffmpeg
 
-RUN_TIMEOUT=1000
+RUN_TIMEOUT=5000
 DISP_NUM=43
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
