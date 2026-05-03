@@ -1,4 +1,6 @@
+firstDataCsv := $(shell ls *_data.csv | head -n 1)
 allDataCsv := $(shell ls *_data.csv)
+allNflocksCsv := $(subst data.csv,nflocks.csv,$(allDataCsv))
 allFlocksizes := $(subst data.csv,flocksizes.png,$(allDataCsv))
 allNflocks := $(subst data.csv,nflocks.png,$(allDataCsv))
 allSpeed := $(subst data.csv,speed.png,$(allDataCsv))
@@ -7,9 +9,10 @@ all: all-flocksizes all-nflocks all-speed nflocks_stats.png nflocks_combined.png
 all-flocksizes: $(allFlocksizes)
 all-nflocks: $(allNflocks)
 all-speed: $(allSpeed)
+all-csv-nflocks: $(allNflocksCsv)
 
 clean-all:
-	rm -f *.png
+	rm -f *.png $(allNflocksCsv) frames.csv
 
 %_flocksizes.png: %_data.csv Makefile
 	echo " \
@@ -74,24 +77,30 @@ clean-all:
 			\"$<\" using (column(1)):(column(27)) with lines title 'avg. bird speed'" \
 	 | gnuplot
 
-combined_logs.csv: $(allDataCsv)
-	paste -d '' $+ | gawk -F ',' '{\
-		arr[1]=$$18; \
-		arr[2]=$$37; \
-		arr[3]=$$56; \
-		arr[4]=$$75; \
-		arr[5]=$$94; \
-		arr[6]=$$113; \
-		arr[7]=$$132; \
-		arr[8]=$$151; \
-		arr[9]=$$170; \
-		arr[10]=$$189; \
+%_nflocks.csv: %_data.csv Makefile
+	cut $< -f 18 -d "," > $@
+
+frames.csv: $(firstDataCsv) Makefile
+	cut $< -f 1 -d "," > $@
+
+combined_logs.csv: frames.csv $(allNflocksCsv)
+	paste -d ',' $+ | gawk -F ',' '{\
+		arr[1]=$$2; \
+		arr[2]=$$3; \
+		arr[3]=$$4; \
+		arr[4]=$$5; \
+		arr[5]=$$6; \
+		arr[6]=$$7; \
+		arr[7]=$$8; \
+		arr[8]=$$9; \
+		arr[9]=$$10; \
+		arr[10]=$$11; \
 		sum=arr[1]+arr[2]+arr[3]+arr[4]+arr[5]+arr[6]+arr[7]+arr[8]+arr[9]+arr[10]; \
 		asort(arr, sarr); \
 		print $$1","arr[1]","arr[2]","arr[3]","arr[4]","arr[5]","arr[6]","arr[7]","arr[8]","arr[9]","arr[10]","sum","sarr[1]","(sarr[5]+sarr[6])/2","sarr[10]","sarr[3]","sarr[8]; \
 	}' > $@
+	paste -d '' $+ 
 	#cat $@
-
 
 nflocks_stats.png: combined_logs.csv Makefile
 	echo " \

@@ -1575,7 +1575,7 @@ void Flock2::UpdateFlockData ()
 		int gc = m_Birds.bufUI(FGCELL)[i];
 		if ( gc != GRID_UNDEF ) {
 			if(isnan(b->pos.x) || isnan(b->pos.y) || isnan(b->pos.z)) {
-				printf("Warning: Position for bird %d is NaN!\n", i);
+				printf("Warning at frame %d: Position for bird %d is NaN!\n", m_frame, i);
 				continue;
 			}
 			assert(!isnan(b->pos.x) && !isnan(b->pos.y) && !isnan(b->pos.z));
