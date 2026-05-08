@@ -132,6 +132,8 @@ public:
 
 	std::string		simulation_id;
 
+	void			DebugCheck (int step);
+
 	// Simulation
 	Bird*			AddBird ( Vec3F pos, Vec3F vel, Vec3F target, float power );
 	void			DefaultParams();
@@ -196,10 +198,10 @@ public:
 	Flock			m_Flock;			// flock data
 	ParamMap_t		m_ParamMap;
 
-	int									max_cluster_id;		// clustering birds: maximum id
+	int					max_cluster_id;		// clustering birds: maximum id
 	std::vector<std::vector<int>>		cluster_assignment;
-	std::vector<int>					cluster_order;
-	std::vector<Histogram>				cluster_histogram;
+	std::vector<int>			cluster_order;
+	std::vector<Histogram>			cluster_histogram;
 
 	// Sim setup
 	float			m_time;
@@ -377,7 +379,7 @@ Predator* Flock2::AddPredator(Vec3F pos, Vec3F vel, Vec3F target, float power)
 	p.orient.normalize();
 	p.orient.toEuler(angs);
 
-	p.currentState = HOVER;
+	p.currentState = INACTIVE;
 
 	m_Predators.SetElem(FPREDATOR, ndx, &p);
 	//printf("Predator is added at: %f, %f, %f \n", p.pos.x, p.pos.y, p.pos.z);
@@ -785,7 +787,7 @@ void Flock2::Reset (int num, int num_pred )
 
 		// randomly distribute birds
 		pos = m_rnd.randV3( -50, 50 );
-		pos.y = pos.y * .5f + 50;
+		pos.y = pos.y * .5f + 100;
 
 		vel = m_rnd.randV3( -20, 20 );
 		vel *= 7.5 / vel.Length ();
@@ -847,7 +849,7 @@ void Flock2::Reset (int num, int num_pred )
 			m_BirdsTmp.AssignToGPU ( "FBirdsTmp", m_Module );
 			m_Grid.AssignToGPU ( "FGrid", m_Module );
 			m_Predators.AssignToGPU ( "FPredators", m_Module );			// predators
-			cuCheck ( cuMemcpyHtoD ( m_cuAccel, &m_Accel,	sizeof(Accel) ),	(char*)"Accel", (char*)"cuMemcpyHtoD", (char*)"cuAccel", DEBUG_CUDA );
+			cuCheck ( cuMemcpyHtoD ( m_cuAccel, &m_Accel,	sizeof(Accel) ),(char*)"Accel", (char*)"cuMemcpyHtoD", (char*)"cuAccel", DEBUG_CUDA );
 			cuCheck ( cuMemcpyHtoD ( m_cuParam, &m_Params, sizeof(Params) ),(char*)"Params", (char*)"cuMemcpyHtoD", (char*)"cuParam", DEBUG_CUDA );
 			cuCheck ( cuMemcpyHtoD ( m_cuFlock, &m_Flock, sizeof(Flock) ),	(char*)"Flock", (char*)"cuMemcpyHtoD", (char*)"cuFlock", DEBUG_CUDA );
 
@@ -1021,7 +1023,7 @@ void Flock2::InsertIntoGrid ()
 		int gs;
 		Vec3F ppos;
 		uint* pgcell =	  m_Birds.bufUI (FGCELL);
-		uint* pgndx =			m_Birds.bufUI (FGNDX);
+		uint* pgndx =	  m_Birds.bufUI (FGNDX);
 
 		Bird* b;
 
@@ -1219,7 +1221,8 @@ void Flock2::FindNeighbors ()
 			}
 
 			// pre-compute for efficiency
-			diri = bi->vel;			diri.Normalize();
+			diri = bi->vel;
+			diri.Normalize();
 
 			// clear current bird info
 			bi->ave_pos.Set(0,0,0);
@@ -1431,6 +1434,17 @@ void Flock2::CalculateClusters ()
 	}
 */
 
+
+/*
+	// print all birds
+	Bird *bi;
+	int numPoints = m_Params.num_birds;
+	for (int i=0; i < numPoints; i++) { // for each bird..
+		bi = (Bird*) m_Birds.GetElem( FBIRD, i);
+			printf("bird %d, id %d, cluster %d \n", i, bi->id, bi->cluster_id);
+	}
+	// */
+
 	cluster_histogram.clear();
 	cluster_histogram.resize(cluster_assignment.size());
 
@@ -1456,13 +1470,22 @@ void Flock2::CalculateClusters ()
 	}
 
 /*
-	printf("--------------------------------\n");
+	printf("--- Histogram start -----------------------------\n");
+	Bird *bj;
+	uint c_id;
 	for(unsigned int i = 0; i < cluster_histogram.size(); i++) {
 		if(cluster_histogram.at(i).bird_cnt > m_Params.num_birds * m_Params.cluster_minsize_color)
-		//if(cluster_histogram.at(i).bird_cnt > m_Params.num_birds / 20)
-			printf("cluster %d, %d elements, order %d\n", cluster_histogram.at(i).cluster_id, cluster_histogram.at(i).bird_cnt, cluster_order.at(cluster_histogram.at(i).cluster_id));
+		{
+			c_id = cluster_histogram.at(i).cluster_id;
+			printf("cluster %d, %d elements, order %d\n", c_id, cluster_histogram.at(i).bird_cnt, cluster_order.at(c_id));
+			for(unsigned int j = 0; j < cluster_assignment.at(c_id).size(); j++) {
+				bj = (Bird*) m_Birds.GetElem( FBIRD, cluster_assignment.at(c_id).at(j));
+				printf("  bird %d, id %d, cluster %d, position (x/y/z) %.1f, %.1f, %.1f \n", cluster_assignment.at(c_id).at(j), bj->id, bj->cluster_id, bj->pos.x, bj->pos.y, bj->pos.z);
+			}
+		}
 	}
-*/
+	printf("--- Histogram end -------------------------------\n");
+	// */
 }
 
 //----------------------------------------------------------------
@@ -2042,7 +2065,6 @@ void Flock2::AdvanceOrientationHoetzlein ()
 
 			// Retrieve birds from GPU for rendering & visualization
 			m_Birds.Retrieve ( FBIRD );
-
 			cuCtxSynchronize ();
 		#endif
 
@@ -2323,7 +2345,6 @@ void Flock2::AdvanceVectorsReynolds ()
 
 			// Retrieve birds from GPU for rendering & visualization
 			m_Birds.Retrieve ( FBIRD );
-
 			cuCtxSynchronize ();
 		#endif
 
@@ -2480,6 +2501,8 @@ void Flock2::Advance_pred()
 					new_state = HOVER;			// another bird caught, switch to hover
 				}
 			}
+			else
+				new_state = HOVER;
 		}
 
 		// update predator state
@@ -2782,6 +2805,9 @@ void Flock2::VisualizeSelectedBird ()
 	sprintf ( msg, "ave. total: %4.3f watts / bird", m_Flock.Ptotal );	drawText ( Vec2F(10, 360), msg, tc );
 	sprintf ( msg, "ave. speed: %4.6f m/s", m_Flock.speed );						drawText ( Vec2F(10, 380), msg, tc );
 
+	sprintf ( msg, "bird ID:  %d", b->id );	drawText ( Vec2F(10, 400), msg, tc );
+	sprintf ( msg, "bird ndx:  %d", ndx );	drawText ( Vec2F(10, 420), msg, tc );
+
 	// visualize bird (green)
 	m_vis.push_back ( vis_t( b->pos, 1.1f, Vec4F(0,1,0,1), "" ) );
 
@@ -2887,6 +2913,32 @@ void Flock2::VisualizeFramenumber ()
 	sprintf ( msg, "frame: %d", m_frame); drawText ( Vec2F(w - 200, 30), msg, tc );
 }
 
+void Flock2::DebugCheck (int step)
+{
+	return;
+	
+	Bird* b;
+	uint found = 0;
+	uint errors = 0;
+	for (int i=0; i < m_Params.num_birds; i++) {
+		found = 0;
+		for (int j=0; j < m_Params.num_birds; j++) {
+			b = (Bird*) m_Birds.GetElem( FBIRD, j);
+			if(b->id == i)
+				found ++;
+		}
+		if(found != 1)
+		{
+			printf("Attention, ID %d found %d times.\n", i, found);
+			errors++;
+		}
+	}
+	if(errors != 0)
+	{
+		printf("Step %d, errors %d, exiting.\n", step, errors);
+		exit(2);
+	}
+}
 
 // Run
 // run a single time step
@@ -2904,32 +2956,41 @@ void Flock2::Run ()
 
 	bird_count = 0;
 
+	DebugCheck (0);
+
 	//--- Insert birds into acceleration grid
 	InsertIntoGrid ();
+	DebugCheck (1);
 
 	//--- Prefix scan for accel grid
 	PrefixSumGrid ();
+	DebugCheck (2);
 
 	//--- Find neighbors
 	FindNeighbors ();
+	DebugCheck (3);
 
 	//--- Advance birds
 	if ( m_method==0 ) {
 		AdvanceOrientationHoetzlein ();			// 2024 Hoetzlein, Flock2
 	} else {
-		AdvanceVectorsReynolds ();					// 1987 Reynolds, Boids
+		AdvanceVectorsReynolds ();			// 1987 Reynolds, Boids
 	}
+	DebugCheck (4);
 
 	//--- Calculate cluster metrics (after Advance*(), because need to Retrieve data first)
 	AssignClusters ();
 	CalculateClusters ();
+	DebugCheck (5);
 
 	//--- Advance predators
 	Advance_pred();
+	DebugCheck (6);
 
 	//--- Update flock data (centroid, energy)
 	UpdateFlockData ();
-
+	DebugCheck (7);
+	
 	//--- Outputs
 	// OutputPointCloudFiles ( m_frame );
 	// OutputPlot ( 0, m_frame );
@@ -2953,7 +3014,14 @@ void Flock2::Run ()
 	m_frame ++;
 	
 	if(m_frame == 1 && m_Params.spawn_predators_frame != 0)
+	{
+		Predator* p;
+		for (int m = 0; m < m_Params.num_predators; m++) {
+			p = (Predator*)m_Predators.GetElem(FPREDATOR, m);
+			p->currentState = INACTIVE;
+		}
 		m_Params.num_predators = 0;
+	}
 	if(m_frame == m_Params.spawn_predators_frame)
 		m_Params.num_predators += m_Params.spawn_predators;
 	
@@ -3792,7 +3860,15 @@ void Flock2::keyboard(int keycode, AppEnum action, int mods, int x, int y)
 	case 'i': m_draw_clusters = !m_draw_clusters; break;
 	case 'p': m_draw_plot = !m_draw_plot; break;
 	case 'w': m_calculate_clusters = !m_calculate_clusters; break;
-	case 'e': m_Params.num_predators = (m_Params.num_predators + 1 ) % 2 ; break;
+	case 'e':
+		m_Params.num_predators = (m_Params.num_predators + 1 ) % 2 ; 
+		if(m_Params.num_predators == 0)
+		{
+			Predator* p;
+			p = (Predator*)m_Predators.GetElem(FPREDATOR, 0);
+			p->currentState = INACTIVE;
+		}
+		break;
 
 	case 'c':
 		m_cockpit_view = !m_cockpit_view;

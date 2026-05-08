@@ -1,4 +1,4 @@
-save_data: 1
+save_data: 0
 frame_terminate: 150000
 
 num_birds: 10000
@@ -15,9 +15,9 @@ pred_radius: 80.0
 pred_power: 15.0
 pred_hover_height: 150
 
-spawn_predators: 0
+spawn_predators: 1
 # settling period: about 20000; mid of simulation 80000
-spawn_predators_frame: 80000
+spawn_predators_frame: 20000
 
 # default: 300
 # zoomed in: 150

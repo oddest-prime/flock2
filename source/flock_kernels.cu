@@ -344,11 +344,17 @@ inline __device__ __host__ float circleDelta(float b, float a)
 extern "C" __global__ void advanceOrientationHoetzlein ( float time, float dt, float ss, int numPnts )
 {
 	uint i = __mul24(blockIdx.x, blockDim.x) + threadIdx.x;	// particle index
-	if ( i >= numPnts ) return;
+
+	if ( i >= numPnts ) 
+		return;
 
 	uint gc = FBirds.bufUI(FGCELL)[ i ];
-	if ( gc == GRID_UNDEF ) return;						// particle out-of-range
-
+	if ( gc == GRID_UNDEF ) 
+	{
+		printf ("ERROR: gc == GRID_UNDEF // particle out-of-range, i %d, gc %d\n", i, gc);
+		return;						// particle out-of-range
+	}
+	
 	// Get current bird
 	Bird* b = ((Bird*) FBirds.data(FBIRD)) + i;
 	Bird* bj;
@@ -359,7 +365,7 @@ extern "C" __global__ void advanceOrientationHoetzlein ( float time, float dt, f
 	quat4 ctrlq;
 	float airflow, aoa, L, pitch, yaw;
 
-
+	// printf ("advanceOrientationHoetzlein: i %d, id %d \n", i, b->id);
 
 	#ifdef DEBUG_BIRD
 		if (b->id == DEBUG_BIRD) {
@@ -376,7 +382,8 @@ extern "C" __global__ void advanceOrientationHoetzlein ( float time, float dt, f
 
 	ctrlq = quat_inverse ( b->orient );
 
-  float3 center = make_float3(0,50,0);
+	float3 center = make_float3(0,50,0);
+	//float3 center = make_float3(FAccel.bound_max.x - FAccel.bound_min.x, FAccel.bound_max.y - FAccel.bound_min.y, FAccel.bound_max.z - FAccel.bound_min.z);
 
 	if ( b->r_nbrs > 0 ) {
 
@@ -445,8 +452,10 @@ extern "C" __global__ void advanceOrientationHoetzlein ( float time, float dt, f
 		// (from Noortje Hagelaars, based on CPU version, 2024)
 		Predator* p;
 		for (int m = 0; m < FParams.num_predators; m++) {
-
 			p = (Predator*) FPredators.data(FPREDATOR) + m;
+			if(p->currentState == INACTIVE)
+				continue;
+
 			float3 predatorDir = p->pos - b->pos;
 			float predatorDist = length ( predatorDir );
 
@@ -598,11 +607,13 @@ extern "C" __global__ void advanceOrientationHoetzlein ( float time, float dt, f
 
 	b->pos += b->vel * dt;
 
-	// Boundaries
-	if ( b->pos.x < FAccel.bound_min.x ) b->pos.x = FAccel.bound_max.x;
-	if ( b->pos.x > FAccel.bound_max.x ) b->pos.x = FAccel.bound_min.x;
-	if ( b->pos.z < FAccel.bound_min.z ) b->pos.z = FAccel.bound_max.z;
-	if ( b->pos.z > FAccel.bound_max.z ) b->pos.z = FAccel.bound_min.z;
+	// Wrap boundaries (X/Y/Z)
+	if ( b->pos.x < FAccel.bound_min.x ) b->pos.x = FAccel.bound_max.x - 1.0;
+	if ( b->pos.x > FAccel.bound_max.x ) b->pos.x = FAccel.bound_min.x + 1.0;
+	if ( b->pos.y < FAccel.bound_min.y ) b->pos.y = FAccel.bound_max.y - 1.0;
+	if ( b->pos.y > FAccel.bound_max.y ) b->pos.y = FAccel.bound_min.y + 1.0;
+	if ( b->pos.z < FAccel.bound_min.z ) b->pos.z = FAccel.bound_max.z - 1.0;
+	if ( b->pos.z > FAccel.bound_max.z ) b->pos.z = FAccel.bound_min.z + 1.0;
 
 	// Integrate velocity
 	b->vel += accel * dt;

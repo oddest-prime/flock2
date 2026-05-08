@@ -108,6 +108,7 @@
 	};
 
 	enum predState {
+		INACTIVE,	// state0
 		HOVER,		// state1
 		ATTACK,		// state2
 		FOLLOW		// state3
