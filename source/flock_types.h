@@ -196,6 +196,8 @@
 		float		max_predspeed, min_predspeed;
 		float		pred_attack_amt;
 		float		pred_mass;
+		float		pred_pitch_decay;
+		float		pred_pitch_min, pred_pitch_max;
 
 		float		cluster_threshold_dist;
 		float		cluster_minsize_color;

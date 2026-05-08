@@ -473,6 +473,9 @@ void Flock2::DefaultParams ()
 	m_Params.avoid_pred_angular_amt = 0.08f;			// bird angular avoidance amount w.r.t. predator
 	m_Params.avoid_pred_power_amt = 0.08f;				// power avoidance amount (N) w.r.t. predator
 	m_Params.avoid_pred_power_ctr = 3;					// power avoidance center (N) w.r.t. predator
+	m_Params.pred_pitch_decay = 0.95;				// pitch decay (return to level flight)
+	m_Params.pred_pitch_min = -40;					// min pitch (degrees)
+	m_Params.pred_pitch_max = 20;					// max pitch (degrees)
 
 	m_Params.cluster_threshold_dist = 3.0;				// cluster threshold in meters
 	m_Params.cluster_minsize_color = 0.02;				// minimum cluster size to color it (range 0 - 1, relative to num_birds)
@@ -544,6 +547,9 @@ void Flock2::SetupParams()
 	m_ParamMap["avoid_pred_angular_amt"] =				ParamPtr('f', &m_Params.avoid_pred_angular_amt);
 	m_ParamMap["avoid_pred_power_amt"] =				ParamPtr('f', &m_Params.avoid_pred_power_amt);
 	m_ParamMap["avoid_pred_power_ctr"] =				ParamPtr('f', &m_Params.avoid_pred_power_ctr);
+	m_ParamMap["pred_pitch_decay"] =							ParamPtr('f', &m_Params.pred_pitch_decay);
+	m_ParamMap["pred_pitch_min"] =							ParamPtr('f', &m_Params.pred_pitch_min);
+	m_ParamMap["pred_pitch_max"] =							ParamPtr('f', &m_Params.pred_pitch_max);
 
 	m_ParamMap["cluster_threshold_dist"] =				ParamPtr('f', &m_Params.cluster_threshold_dist);
 	m_ParamMap["cluster_minsize_color"] =				ParamPtr('f', &m_Params.cluster_minsize_color);
@@ -2406,17 +2412,20 @@ void Flock2::Advance_pred()
 				//printf("current state = HOVER\n");
 
 				// dirj = m_Flock.centroid - p->pos;
-				dirj = m_Flock.flock_centers[0] - p->pos;
+				dirj = (m_Flock.flock_centers[0]+Vec3F(0.0, 65.0, 0.0)) - p->pos;
 				dist = dirj.Length();
 				dirj.Normalize();
 				dirj *= p->orient.inverse();
 				// dirj = (dirj / dist) * p->orient.inverse();
+				
 				yaw = atan2(dirj.z, dirj.x) * RADtoDEG;
 				pitch = asin(dirj.y) * RADtoDEG;
-				//p->target.z -= yaw * m_Params.avoid_pred_angular_amt;
-				//p->target.y -= pitch * m_Params.avoid_pred_angular_amt;
+				p->target.z += yaw * m_Params.avoid_pred_angular_amt;
+				p->target.y += pitch * m_Params.avoid_pred_angular_amt;
 
-				if (dist > 50.0f) {
+				dirj = (m_Flock.flock_centers[0]) - p->pos;
+				dist = dirj.Length();
+				if (dist > 60.0f) {
 					new_state = ATTACK;				// predator far from flock, switch to attack
 					//printf("Distance reached, %f.\n", p->pos.y);
 				}
@@ -2483,8 +2492,14 @@ void Flock2::Advance_pred()
 		up = Vec3F(0, 1, 0) * p->orient;			// Y-axis is body up
 		right = Vec3F(0, 0, 1) * p->orient;			// Z-axis is body right
 
+		dbgprintf ( "p->target.y: %6.2f\n", p->target.y);
+
 		// Direction of motion
 		p->speed = p->vel.Length();
+		if(p->target.y > -20) // predator is not going down: less topspeed
+		{
+			if (p->speed > m_Params.max_predspeed/2) p->speed = m_Params.max_predspeed/2;
+		}
 		if (p->speed < m_Params.min_predspeed) p->speed = m_Params.min_predspeed;				// birds dont go in reverse // set min speed to predminspeed
 		if (p->speed > m_Params.max_predspeed) p->speed = m_Params.max_predspeed;
 		if (p->speed == 0) {
@@ -2504,9 +2519,9 @@ void Flock2::Advance_pred()
 		//p->target.z = fmod(p->target.z, 180);								// yaw -180/180
 		p->target.z = fmod180(p->target.z);								// yaw -180/180
 		p->target.x = circleDelta(p->target.z, angs.z) * 0.5;				// banking
-		p->target.y *= m_Params.pitch_decay;								// level out
-		if (p->target.y < m_Params.pitch_min) p->target.y = m_Params.pitch_min;
-		if (p->target.y > m_Params.pitch_max) p->target.y = m_Params.pitch_max;
+		p->target.y *= m_Params.pred_pitch_decay;								// level out
+		if (p->target.y < m_Params.pred_pitch_min) p->target.y = m_Params.pred_pitch_min;
+		if (p->target.y > m_Params.pred_pitch_max) p->target.y = m_Params.pred_pitch_max;
 		if (fabs(p->target.y) < 0.0001) p->target.y = 0;
 
 		// Compute angular acceleration
@@ -2695,14 +2710,16 @@ void Flock2::VisualizePredators ()
 		drawText ( Vec2F(10, 30 + 60 + 20*n), msg, tc );
 		sprintf ( msg, "speed: %4.1f m/s", p->speed );
 		drawText ( Vec2F(10, 30 + 80 + 20*n), msg, tc );
+		sprintf ( msg, "pitch: %4.1f degrees", p->target.y );
+		drawText ( Vec2F(10, 30 + 100 + 20*n), msg, tc );
 
 		auto dirj = m_Flock.centroid - p->pos;
 		float dist = dirj.Length();
 		sprintf ( msg, "distance: %4.1f ", dist );
-		drawText ( Vec2F(10, 30 + 100 + 20*n), msg, tc );
+		drawText ( Vec2F(10, 30 + 120 + 20*n), msg, tc );
 	}
 	sprintf ( msg, "avg. bird speed: %4.1f m/s", m_Flock.speed );
-	drawText ( Vec2F(10, 30 + 130), msg, tc );
+	drawText ( Vec2F(10, 30 + 140), msg, tc );
 }
 
 void Flock2::VisualizeSelectedBird ()
@@ -3013,7 +3030,7 @@ bool Flock2::init()
 	m_cockpit_view = false;
 	m_draw_mesh = 0;
 	m_draw_grid = false;
-	m_draw_origin = false;
+	m_draw_origin = true;
 	m_draw_help = false;
 	m_draw_framenumber = true;
 	m_draw_clusters = true;
@@ -3552,6 +3569,12 @@ void Flock2::display ()
 				else
 					drawCircle3D (p->pos, p->pos + (p->vel * predator_size), 0.5, Vec4F(1,1,1,1)); // white inner circle
 				drawCircle3D (p->pos, p->pos + (p->vel * predator_size), 1.5, pclr);
+
+				if(p->currentState == ATTACK)
+					drawLine3D (p->pos, m_Flock.flock_centers[0], pclr);
+				if(p->currentState == HOVER)
+					drawLine3D (p->pos, m_Flock.flock_centers[0]+Vec3F(0.0, 65.0, 0.0), Vec4F(1,1,1,1));
+
 			}
 		end3D();
 	}
