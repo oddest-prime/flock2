@@ -196,8 +196,11 @@
 		float		max_predspeed, min_predspeed;
 		float		pred_attack_amt;
 		float		pred_mass;
+		float		pred_power;
+		float		pred_wing_area;
 		float		pred_pitch_decay;
 		float		pred_pitch_min, pred_pitch_max;
+		float		pred_hover_height;
 
 		float		cluster_threshold_dist;
 		float		cluster_minsize_color;

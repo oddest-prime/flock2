@@ -466,16 +466,19 @@ void Flock2::DefaultParams ()
 
 	// Predator
 	m_Params.pred_radius = 10.0;				// detection radius of predator for birds
-	m_Params.pred_mass = 0.8;
+	m_Params.pred_mass = 1.1;
+	m_Params.pred_power = 3.2173;					// 100% power (in joules)
+	m_Params.pred_wing_area = 0.1224;
 	m_Params.max_predspeed = 22;				// m/s
 	m_Params.min_predspeed = 18;				// m/s
 	m_Params.pred_attack_amt = 0.1f;			// attacking amount
 	m_Params.avoid_pred_angular_amt = 0.08f;			// bird angular avoidance amount w.r.t. predator
 	m_Params.avoid_pred_power_amt = 0.08f;				// power avoidance amount (N) w.r.t. predator
-	m_Params.avoid_pred_power_ctr = 3;					// power avoidance center (N) w.r.t. predator
+	m_Params.avoid_pred_power_ctr = 3;				// power avoidance center (N) w.r.t. predator
 	m_Params.pred_pitch_decay = 0.95;				// pitch decay (return to level flight)
 	m_Params.pred_pitch_min = -40;					// min pitch (degrees)
 	m_Params.pred_pitch_max = 20;					// max pitch (degrees)
+	m_Params.pred_hover_height = 50.0;				// height over flock when in HOVER mode
 
 	m_Params.cluster_threshold_dist = 3.0;				// cluster threshold in meters
 	m_Params.cluster_minsize_color = 0.02;				// minimum cluster size to color it (range 0 - 1, relative to num_birds)
@@ -540,6 +543,8 @@ void Flock2::SetupParams()
 
 	m_ParamMap["pred_radius"] =							ParamPtr('f', &m_Params.pred_radius);
 	m_ParamMap["pred_mass"] =							ParamPtr('f', &m_Params.pred_mass);
+	m_ParamMap["pred_power"] =							ParamPtr('f', &m_Params.pred_power);
+	m_ParamMap["pred_wing_area"] =							ParamPtr('f', &m_Params.pred_wing_area);
 	m_ParamMap["max_predspeed"] =						ParamPtr('f', &m_Params.max_predspeed);
 	m_ParamMap["min_predspeed"] =						ParamPtr('f', &m_Params.min_predspeed);
 	m_ParamMap["pred_attack_amt"] =						ParamPtr('f', &m_Params.pred_attack_amt);
@@ -550,6 +555,7 @@ void Flock2::SetupParams()
 	m_ParamMap["pred_pitch_decay"] =							ParamPtr('f', &m_Params.pred_pitch_decay);
 	m_ParamMap["pred_pitch_min"] =							ParamPtr('f', &m_Params.pred_pitch_min);
 	m_ParamMap["pred_pitch_max"] =							ParamPtr('f', &m_Params.pred_pitch_max);
+	m_ParamMap["pred_hover_height"] =							ParamPtr('f', &m_Params.pred_hover_height);
 
 	m_ParamMap["cluster_threshold_dist"] =				ParamPtr('f', &m_Params.cluster_threshold_dist);
 	m_ParamMap["cluster_minsize_color"] =				ParamPtr('f', &m_Params.cluster_minsize_color);
@@ -2224,7 +2230,7 @@ void Flock2::AdvanceOrientationHoetzlein ()
 			aoa = acos( fwd.Dot( vaxis ) )*RADtoDEG + 1;		// angle-of-attack = angle between velocity and body forward
  			if (isnan(aoa)) aoa = 1;
 			// CL = sin(aoa * 0.2) = coeff of lift, approximate CL curve with sin
-			L = (sin( aoa * 0.1)+0.5) * dynamic_pressure * m_Params.lift_factor *m_Params.wing_area;		// lift equation. L = CL (1/2 p v^2) A
+			L = (sin( aoa * 0.1)+0.5) * dynamic_pressure * m_Params.lift_factor * m_Params.wing_area;		// lift equation. L = CL (1/2 p v^2) A
 			lift = up * L;
 			force += lift;
 
@@ -2412,7 +2418,7 @@ void Flock2::Advance_pred()
 				//printf("current state = HOVER\n");
 
 				// dirj = m_Flock.centroid - p->pos;
-				dirj = (m_Flock.flock_centers[0]+Vec3F(0.0, 65.0, 0.0)) - p->pos;
+				dirj = (m_Flock.flock_centers[0]+Vec3F(0.0, m_Params.pred_hover_height, 0.0)) - p->pos;
 				dist = dirj.Length();
 				dirj.Normalize();
 				dirj *= p->orient.inverse();
@@ -2425,7 +2431,7 @@ void Flock2::Advance_pred()
 
 				dirj = (m_Flock.flock_centers[0]) - p->pos;
 				dist = dirj.Length();
-				if (dist > 60.0f) {
+				if (dist > 60.0f && p->pos.y > m_Flock.flock_centers[0].y + m_Params.pred_hover_height * 0.6) {
 					new_state = ATTACK;				// predator far from flock, switch to attack
 					//printf("Distance reached, %f.\n", p->pos.y);
 				}
@@ -2492,7 +2498,7 @@ void Flock2::Advance_pred()
 		up = Vec3F(0, 1, 0) * p->orient;			// Y-axis is body up
 		right = Vec3F(0, 0, 1) * p->orient;			// Z-axis is body right
 
-		dbgprintf ( "p->target.y: %6.2f\n", p->target.y);
+		//dbgprintf ( "p->target.y: %6.2f\n", p->target.y);
 
 		// Direction of motion
 		p->speed = p->vel.Length();
@@ -2553,19 +2559,19 @@ void Flock2::Advance_pred()
 		dynamic_pressure = 0.5f * m_Params.air_density * airflow * airflow;
 
 		// Lift force
-		aoa = acos(fwd.Dot(vaxis)) * RADtoDEG + 1;		// angle-of-attack = angle between velocity and body forward
+		aoa = acos( fwd.Dot( vaxis ) )*RADtoDEG + 1;		// angle-of-attack = angle between velocity and body forward
 		if (isnan(aoa)) aoa = 1;
 		// CL = sin(aoa * 0.2) = coeff of lift, approximate CL curve with sin
-		L = sin(aoa * 0.2) * dynamic_pressure * m_Params.lift_factor * 0.5;		// lift equation. L = CL (1/2 p v^2) A
+		L = (sin( aoa * 0.1)+0.5) * dynamic_pressure * m_Params.lift_factor * m_Params.pred_wing_area;		// lift equation. L = CL (1/2 p v^2) A
 		lift = up * L;
 		force += lift;
 
 		// Drag force
-		drag = vaxis * dynamic_pressure * m_Params.drag_factor * -1.0f;			// drag equation. D = Cd (1/2 p v^2) A
+		drag = vaxis * dynamic_pressure * -m_Params.drag_factor * m_Params.pred_wing_area;			// drag equation. D = Cd (1/2 p v^2) A
 		force += drag;
 
 		// Thrust force
-		thrust = fwd * p->power;
+		thrust = fwd * p->power * m_Params.pred_power;
 		force += thrust;
 
 		// Integrate position
@@ -2589,6 +2595,8 @@ void Flock2::Advance_pred()
 			// power up so we have enough lift to avoid the ground
 			p->power = m_Params.avoid_ground_power;
 		}
+		else
+			p->power = 1;
 
 		// Ceiling avoidance
 		L = m_Accel.bound_max.y - p->pos.y;
@@ -2706,9 +2714,9 @@ void Flock2::VisualizePredators ()
 		drawText ( Vec2F(10, 30 + 20 + 20*n), msg, tc );
 		sprintf ( msg, "centroid: x= %4.1f  y= %4.1f  z= %4.1f ", m_Flock.centroid.x, m_Flock.centroid.y, m_Flock.centroid.z );
 		drawText ( Vec2F(10, 30 + 40 + 20*n), msg, tc );
-		sprintf ( msg, "target: x= %4.1f  y= %4.1f  z= %4.1f ", p->target.x, p->target.y, p->target.z );
-		drawText ( Vec2F(10, 30 + 60 + 20*n), msg, tc );
 		sprintf ( msg, "speed: %4.1f m/s", p->speed );
+		drawText ( Vec2F(10, 30 + 60 + 20*n), msg, tc );
+		sprintf ( msg, "power: %4.1f joules", p->power * m_Params.pred_power );
 		drawText ( Vec2F(10, 30 + 80 + 20*n), msg, tc );
 		sprintf ( msg, "pitch: %4.1f degrees", p->target.y );
 		drawText ( Vec2F(10, 30 + 100 + 20*n), msg, tc );
@@ -3573,7 +3581,7 @@ void Flock2::display ()
 				if(p->currentState == ATTACK)
 					drawLine3D (p->pos, m_Flock.flock_centers[0], pclr);
 				if(p->currentState == HOVER)
-					drawLine3D (p->pos, m_Flock.flock_centers[0]+Vec3F(0.0, 65.0, 0.0), Vec4F(1,1,1,1));
+					drawLine3D (p->pos, m_Flock.flock_centers[0]+Vec3F(0.0, m_Params.pred_hover_height, 0.0), Vec4F(1,1,1,1));
 
 			}
 		end3D();
