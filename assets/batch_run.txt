@@ -11,17 +11,17 @@ pred_pitch_decay: 0.95
 pred_pitch_min: -85
 pred_pitch_max: 20
 # pred_radius: 20.0
-pred_radius: 80.0
-pred_power: 15.0
+pred_radius: 50.0
+pred_power: 25.0
 pred_hover_height: 150
 
-spawn_predators: 0
+spawn_predators: 1
 # settling period: about 20000; mid of simulation 80000
-spawn_predators_frame: 80000
+spawn_predators_frame: 70000
 
 # default: 300
 # zoomed in: 150
-view_orbit_dist: 300
+view_orbit_dist: 250
 
 # VISUALIZE_REALISTIC: 0
 # VISUALIZE_BLACK_WHITE: 1

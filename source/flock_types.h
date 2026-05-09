@@ -121,6 +121,8 @@
 
 		f3			pos, vel, accel, target;
 		f3			ave_pos, ave_vel, ang_accel;
+		f3			target_pos;
+		int 			target_bird;
 
 		float		speed, pitch_adv, power;
 		int			id, near_j, t_nbrs, r_nbrs;

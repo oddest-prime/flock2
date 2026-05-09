@@ -710,14 +710,16 @@ void Flock2::DataOutputFileAppend ()
 	// predator stats
 	fprintf(m_data_outfile, "%d,", m_Params.num_predators);
 	p = (Predator*)m_Predators.GetElem(FPREDATOR, 0);
-	if(p->currentState == ATTACK)
-  	fprintf(m_data_outfile, "1,");
+	if(p->currentState == INACTIVE)
+  		fprintf(m_data_outfile, "1,");
+	else if(p->currentState == ATTACK)
+  		fprintf(m_data_outfile, "2,");
 	else if(p->currentState == HOVER)
-  	fprintf(m_data_outfile, "2,");
+  		fprintf(m_data_outfile, "3,");
 	else if(p->currentState == FOLLOW)
-  	fprintf(m_data_outfile, "3,");
+  		fprintf(m_data_outfile, "4,");
 	else
-  	fprintf(m_data_outfile, "-1,");
+  		fprintf(m_data_outfile, "-1,");
 	fprintf(m_data_outfile, "%4.3f,", p->speed);
 	// average bird stats
 	fprintf(m_data_outfile, "%4.3f,", m_Flock.Plift);
