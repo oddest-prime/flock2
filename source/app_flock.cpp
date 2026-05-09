@@ -2456,7 +2456,8 @@ void Flock2::Advance_pred()
 
 				dirj = (m_Flock.flock_centers[0]) - p->pos;
 				dist = dirj.Length();
-				if (dist > 60.0f && p->pos.y > m_Flock.flock_centers[0].y + m_Params.pred_hover_height * 0.6) {
+				if (dist > m_Params.pred_hover_height * 0.8 && 
+				    p->pos.y > m_Flock.flock_centers[0].y + m_Params.pred_hover_height * 0.8) {
 					new_state = ATTACK;				// predator far from flock, switch to attack
 					//printf("Distance reached, %f.\n", p->pos.y);
 				}
@@ -2552,10 +2553,9 @@ void Flock2::Advance_pred()
 
 		// Direction of motion
 		p->speed = p->vel.Length();
-		if(p->target.y > -20) // predator is not going down: less topspeed
-		{
+		if(p->target.y > -20) // predator is not going down: less topspeed //// special diving behavour
 			if (p->speed > m_Params.max_predspeed/2) p->speed = m_Params.max_predspeed/2;
-		}
+
 		if (p->speed < m_Params.min_predspeed) p->speed = m_Params.min_predspeed;				// birds dont go in reverse // set min speed to predminspeed
 		if (p->speed > m_Params.max_predspeed) p->speed = m_Params.max_predspeed;
 		if (p->speed == 0) {
@@ -2617,7 +2617,10 @@ void Flock2::Advance_pred()
 		force += lift;
 
 		// Drag force
-		drag = vaxis * dynamic_pressure * -m_Params.drag_factor * m_Params.pred_wing_area;			// drag equation. D = Cd (1/2 p v^2) A
+		if(p->target.y > -20) // predator is not going down: pred_wing_area //// special diving behavour
+			drag = vaxis * dynamic_pressure * -m_Params.drag_factor * m_Params.pred_wing_area;		// drag equation. D = Cd (1/2 p v^2) A
+		else // predator is not going down: lower pred_wing_area //// special diving behavour
+			drag = vaxis * dynamic_pressure * -m_Params.drag_factor * (m_Params.pred_wing_area * 0.25f);		// drag equation. D = Cd (1/2 p v^2) A
 		force += drag;
 
 		// Thrust force
