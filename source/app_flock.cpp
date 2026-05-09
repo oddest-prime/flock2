@@ -2422,6 +2422,8 @@ void Flock2::Advance_pred()
 	float   dist_target_bird;
 	predState new_state;
 
+	Bird *bi;
+
 	yaw = 0;
 	pitch = 0;
 
@@ -2460,7 +2462,7 @@ void Flock2::Advance_pred()
 				}
 
 			}
-			else if (p->currentState == ATTACK) {
+			/* else if (p->currentState == ATTACK) {
 				//printf("current state = ATTACK\n");
 				// dirj = m_Flock.centroid - p->pos;
 				dirj = m_Flock.flock_centers[0] - p->pos;
@@ -2479,28 +2481,51 @@ void Flock2::Advance_pred()
 					new_state = HOVER;			// predator close to centroid, switch to hover
 					//printf("Centroid reached.\n");
 				}
-
+			} */
+			else if (p->currentState == ATTACK) {
+				// look for center bird, pick this to follow	
+				float min_bird_dist = 100;
+				float min_bird_i = 0;
+				Vec3F dirb;
+				for (int i=0; i < m_Params.num_birds; i++)
+				{
+					bi = (Bird*) m_Birds.GetElem(FBIRD, i);
+					dirb = m_Flock.flock_centers[0] - bi->pos;
+					if(dirb.Length() < min_bird_dist)
+					{
+						min_bird_dist = dirb.Length();
+						min_bird_i = i;
+					}
+				}		
+				
+				bi = (Bird*) m_Birds.GetElem(FBIRD, min_bird_i);
+				p->target_pos = bi->pos;
+				p->target_bird = bi->id;
+			
+				new_state = FOLLOW;
 			}
-			else if (p->currentState == FOLLOW) { // 3 : Follow
-
+			else if (p->currentState == FOLLOW) { // 3 : Follow chosen bird
 				//printf("current state = FOLLOW\n");
-				Bird* b = (Bird*)m_Birds.GetElem(FBIRD, bird_index);
-				dirf = b->pos - p->pos;
-				dist_target_bird = dirf.Length();
-				dirf.Normalize();
-				dirf *= p->orient.inverse();
+				for (int i=0; i < m_Params.num_birds; i++)
+				{
+					bi = (Bird*) m_Birds.GetElem(FBIRD, i);
+					if(bi->id == p->target_bird)
+						break;
+				}		
+				p->target_pos = bi->pos;
+
+				dirj = p->target_pos - p->pos;
+				dist = dirj.Length();
+				dirj.Normalize();
+				dirj *= p->orient.inverse();
 
 				yaw = atan2(dirj.z, dirj.x) * RADtoDEG;
 				pitch = asin(dirj.y) * RADtoDEG;
-				p->target.z += yaw * m_Params.boundary_amt;
-				p->target.y += pitch * m_Params.boundary_amt;
+				p->target.z += yaw * m_Params.pred_attack_amt;
+				p->target.y += pitch * m_Params.pred_attack_amt;
 
-				//printf("Following bird\n");
-
-				if (dist_target_bird < 5.5f) {
-					new_state = HOVER;			// target bird caught, switch to eatting!
-				} else if (dist < 5.5f) {
-					new_state = HOVER;			// another bird caught, switch to hover
+				if (dist < 4.0f) {
+					new_state = HOVER;			// target bird caught or missed, switch to HOVER again!
 				}
 			}
 			else
@@ -2731,28 +2756,30 @@ void Flock2::VisualizePredators ()
 		else if(p->currentState == HOVER)
 			sprintf ( msg, "predator %d currentState = HOVER", n );
 		else if(p->currentState == FOLLOW)
-			sprintf ( msg, "predator %d currentState = FOLLOW", n );
+			sprintf ( msg, "predator %d currentState = FOLLOW (bird id %d)", n, p->target_bird);
 		else
 			sprintf ( msg, "predator %d currentState is INVALID", n );
 		drawText ( Vec2F(10, 30 + 20*n), msg, tc );
 		sprintf ( msg, "predator: x= %4.1f  y= %4.1f  z= %4.1f ", p->pos.x, p->pos.y, p->pos.z );
 		drawText ( Vec2F(10, 30 + 20 + 20*n), msg, tc );
-		sprintf ( msg, "centroid: x= %4.1f  y= %4.1f  z= %4.1f ", m_Flock.centroid.x, m_Flock.centroid.y, m_Flock.centroid.z );
+		sprintf ( msg, "target_pos: x= %4.1f  y= %4.1f  z= %4.1f ", p->target_pos.x, p->target_pos.y, p->target_pos.z );
 		drawText ( Vec2F(10, 30 + 40 + 20*n), msg, tc );
-		sprintf ( msg, "speed: %4.1f m/s", p->speed );
+		sprintf ( msg, "centroid: x= %4.1f  y= %4.1f  z= %4.1f ", m_Flock.centroid.x, m_Flock.centroid.y, m_Flock.centroid.z );
 		drawText ( Vec2F(10, 30 + 60 + 20*n), msg, tc );
-		sprintf ( msg, "power: %4.1f joules", p->power * m_Params.pred_power );
+		sprintf ( msg, "speed: %4.1f m/s", p->speed );
 		drawText ( Vec2F(10, 30 + 80 + 20*n), msg, tc );
-		sprintf ( msg, "pitch: %4.1f degrees", p->target.y );
+		sprintf ( msg, "power: %4.1f joules", p->power * m_Params.pred_power );
 		drawText ( Vec2F(10, 30 + 100 + 20*n), msg, tc );
+		sprintf ( msg, "pitch: %4.1f degrees", p->target.y );
+		drawText ( Vec2F(10, 30 + 120 + 20*n), msg, tc );
 
-		auto dirj = m_Flock.centroid - p->pos;
+		auto dirj = p->target_pos - p->pos;
 		float dist = dirj.Length();
 		sprintf ( msg, "distance: %4.1f ", dist );
-		drawText ( Vec2F(10, 30 + 120 + 20*n), msg, tc );
+		drawText ( Vec2F(10, 30 + 140 + 20*n), msg, tc );
 	}
 	sprintf ( msg, "avg. bird speed: %4.1f m/s", m_Flock.speed );
-	drawText ( Vec2F(10, 30 + 140), msg, tc );
+	drawText ( Vec2F(10, 30 + 160), msg, tc );
 }
 
 void Flock2::VisualizeSelectedBird ()
@@ -3412,13 +3439,13 @@ void Flock2::RenderBirdsWithDart ()
 		// bird color
 		b = (Bird*)m_Birds.GetElem(FBIRD, n);
 		clr = Vec4F(0, 0, 0, 1);					// default. black on sky/white.
-		if (m_visualize == VISUALIZE_INFOVIS) {		// infovis coloring..
+		if (m_visualize == VISUALIZE_INFOVIS) {				// infovis coloring..
 			if (b->clr.w == 0) {
 				float a = fmin(b->ang_accel.Length() / 24, 1);
 				clr = Vec4F(0, a, 0, 1);			// untagged, use green = angular accel
 			}
 			else {
-				clr = b->clr;						// use tagged color (orange=boundary bird)
+				clr = b->clr;					// use tagged color (orange=boundary bird)
 			}
 		}
 		if (m_visualize == VISUALIZE_CLUSTERS) {	// cluster coloring..
@@ -3648,8 +3675,8 @@ void Flock2::display ()
 					drawCircle3D (p->pos, p->pos + (p->vel * predator_size), 0.5, Vec4F(1,1,1,1)); // white inner circle
 				drawCircle3D (p->pos, p->pos + (p->vel * predator_size), 1.5, pclr);
 
-				if(p->currentState == ATTACK)
-					drawLine3D (p->pos, m_Flock.flock_centers[0], pclr);
+				if(p->currentState == FOLLOW)
+					drawLine3D (p->pos, p->target_pos, pclr);
 				if(p->currentState == HOVER)
 					drawLine3D (p->pos, m_Flock.flock_centers[0]+Vec3F(0.0, m_Params.pred_hover_height, 0.0), Vec4F(1,1,1,1));
 

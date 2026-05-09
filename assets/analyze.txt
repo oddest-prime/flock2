@@ -12,7 +12,7 @@ pred_pitch_min: -85
 pred_pitch_max: 20
 # pred_radius: 20.0
 pred_radius: 30.0
-pred_power: 15.0
+pred_power: 25.0
 pred_hover_height: 150
 
 spawn_predators: 1
@@ -21,13 +21,13 @@ spawn_predators_frame: 20000
 
 # default: 300
 # zoomed in: 150
-view_orbit_dist: 250
+view_orbit_dist: 200
 
 # VISUALIZE_REALISTIC: 0
 # VISUALIZE_BLACK_WHITE: 1
-# VISUALIZE_INFOVIS: 2          // orange/green density waves + color birds under the influence of predator different
+# VISUALIZE_INFOVIS: 2          // orange/green density waves
 # VISUALIZE_CLUSTERS: 3         // color subflocks in different colors
 # VISUALIZE_PREDATOR: 4	        // color birds under the influence of predator different
-visualize: 3
+visualize: 2
 
 

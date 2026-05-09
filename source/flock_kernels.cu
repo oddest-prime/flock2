@@ -467,7 +467,7 @@ extern "C" __global__ void advanceOrientationHoetzlein ( float time, float dt, f
 				predatorDist = fmax(1.0f, fmin(predatorDist * predatorDist, 100.0f));
 				b->target.z -= yaw * FParams.avoid_pred_angular_amt; // / predatorDist;
 				b->target.y -= pitch * FParams.avoid_pred_angular_amt; // / predatorDist;
-				b->clr = make_float4(0, 0, 1, 1);
+				//b->clr = make_float4(0, 0, 1, 1);
 			}
 		}
 	}
