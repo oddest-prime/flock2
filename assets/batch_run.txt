@@ -28,6 +28,6 @@ view_orbit_dist: 200
 # VISUALIZE_INFOVIS: 2          // orange/green density waves
 # VISUALIZE_CLUSTERS: 3         // color subflocks in different colors
 # VISUALIZE_PREDATOR: 4	        // color birds under the influence of predator different
-visualize: 3
+visualize: 2
 
 

@@ -68,11 +68,11 @@ clean-all:
 		set ylabel \"Speed [m/s]\" \n\
 		set y2label \"Mode/count\" \n\
 		set yrange [0:60] \n\
-		set y2range [0:4] \n\
+		set y2range [0:7] \n\
 		set y2tics 1.0 \n\
 		set output \"$@\" \n\
 		plot	\"$<\" using (column(1)):(column(19)) with lines title '# predators' axes x1y2, \
-			\"$<\" using (column(1)):(column(20)) with lines title 'predator mode (1=ATTACK, 2=HOVER, 3=FOLLOW)' axes x1y2, \
+			\"$<\" using (column(1)):(column(20)) with lines title 'predator mode (1=INACTIVE, 2=ATTACK, 3=HOVER, 4=FOLLOW)' axes x1y2, \
 			\"$<\" using (column(1)):(column(21)) with lines title 'predator speed', \
 			\"$<\" using (column(1)):(column(27)) with lines title 'avg. bird speed'" \
 	 | gnuplot
