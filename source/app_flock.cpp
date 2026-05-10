@@ -2525,7 +2525,7 @@ void Flock2::Advance_pred()
 				p->target.z += yaw * m_Params.pred_attack_amt;
 				p->target.y += pitch * m_Params.pred_attack_amt;
 
-				if (dist < 4.0f) {
+				if (dist < 5.5f) {
 					new_state = HOVER;			// target bird caught or missed, switch to HOVER again!
 				}
 			}
