@@ -5,13 +5,12 @@ num_birds: 10000
 
 num_predators: 1
 min_predspeed: 5
-max_predspeed: 90
+max_predspeed: 80
 avoid_pred_angular_amt: 0.8
 pred_pitch_decay: 0.95
 pred_pitch_min: -85
 pred_pitch_max: 20
-# pred_radius: 20.0
-pred_radius: 40.0
+pred_radius: 80.0
 pred_power: 25.0
 pred_hover_height: 150
 

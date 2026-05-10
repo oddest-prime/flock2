@@ -442,7 +442,7 @@ void Flock2::DefaultParams ()
 
 	m_Params.avoid_angular_amt= 0.01f;			// bird angular avoidance amount
 	m_Params.avoid_power_amt =	0.00f;			// power avoidance amount (N)
-	m_Params.avoid_power_ctr =	3;				// power avoidance center (N)
+	m_Params.avoid_power_ctr =	3;			// power avoidance center (N)
 	m_Params.align_amt = 0.400f;				// bird alignment amount
 	m_Params.cohesion_amt =	0.001f;				// bird cohesion amount
 
@@ -450,16 +450,16 @@ void Flock2::DefaultParams ()
 	m_Params.wing_area = 0.0224;
 	m_Params.lift_factor = 0.5714;				// lift factor
 	m_Params.drag_factor = 0.1731;				// drag factor
-	m_Params.safe_radius = 2.0;					// radius of avoidance (m)
+	m_Params.safe_radius = 2.0;				// radius of avoidance (m)
 	m_Params.pitch_decay = 0.95;				// pitch decay (return to level flight)
-	m_Params.pitch_min = -40;					// min pitch (degrees)
-	m_Params.pitch_max = 20;					// max pitch (degrees)
+	m_Params.pitch_min = -40;				// min pitch (degrees)
+	m_Params.pitch_max = 20;				// max pitch (degrees)
 	m_Params.reaction_speed = 4000;				// reaction speed (millisec)
 	m_Params.dynamic_stability = 0.8f;			// dyanmic stability factor
 	m_Params.air_density = 1.225;				// air density (kg/m^3)
-	m_Params.gravity = Vec3F(0, -9.8, 0);		// gravity (m/s^2)
-	m_Params.front_area = 0.1f;					// section area of bird into wind
-	m_Params.bound_soften = 20;					// ground detection range
+	m_Params.gravity = Vec3F(0, -9.8, 0);			// gravity (m/s^2)
+	m_Params.front_area = 0.1f;				// section area of bird into wind
+	m_Params.bound_soften = 20;				// ground detection range
 	m_Params.avoid_ground_power = 4;			// ground avoid power setting
 	m_Params.avoid_ground_amt = 0.5f;			// ground avoid strength
 	m_Params.avoid_ceil_amt = 0.1f;				// ceiling avoid strength
@@ -469,8 +469,8 @@ void Flock2::DefaultParams ()
 	// Predator
 	m_Params.pred_radius = 10.0;				// detection radius of predator for birds
 	m_Params.pred_mass = 1.1;
-	m_Params.pred_power = 3.2173;					// 100% power (in joules)
-	m_Params.pred_wing_area = 0.1224;
+	m_Params.pred_power = 3.2173;				// 100% power (in joules)
+	m_Params.pred_wing_area = 0.1552;			// wingspan from 74 to 120 cm	https://en.wikipedia.org/wiki/Peregrine_falcon
 	m_Params.max_predspeed = 22;				// m/s
 	m_Params.min_predspeed = 18;				// m/s
 	m_Params.pred_attack_amt = 0.1f;			// attacking amount
